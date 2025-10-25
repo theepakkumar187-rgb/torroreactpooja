@@ -555,6 +555,10 @@ const DataLineagePage = () => {
     filteredEdges: filteredEdges.length,
     sampleEdge: filteredEdges[0]
   });
+  
+  if (filteredEdges.length > 0) {
+    console.log('🔵 EDGE DETAILS:', JSON.stringify(filteredEdges[0], null, 2));
+  }
 
   // Get unique types and sources for filters
   const uniqueTypes = [...new Set(nodes.map(n => n.data.type))];
@@ -777,6 +781,14 @@ const DataLineagePage = () => {
             onEdgeClick={onEdgeClick}
             nodeTypes={nodeTypes}
             fitView
+            fitViewOptions={{ padding: 0.2 }}
+            minZoom={0.1}
+            maxZoom={4}
+            defaultEdgeOptions={{
+              type: 'smoothstep',
+              animated: true,
+              style: { strokeWidth: 6, stroke: '#1976d2' },
+            }}
             attributionPosition="bottom-left"
           >
             <Background color="#aaa" gap={16} />
