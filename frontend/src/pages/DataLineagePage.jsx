@@ -217,7 +217,7 @@ const DataLineagePage = () => {
             color: '#1976d2',
           },
           style: {
-            strokeWidth: columnCount > 0 ? 3 : 2,
+            strokeWidth: 4,
             stroke: '#1976d2',
           },
           label: label,
@@ -497,7 +497,7 @@ const DataLineagePage = () => {
           color: '#1976d2',
         },
         style: {
-          strokeWidth: columnCount > 0 ? 5 : 3,
+          strokeWidth: 6,
           stroke: '#1976d2',
         },
         label: label,
@@ -523,9 +523,13 @@ const DataLineagePage = () => {
       console.log(`✅ Created ${flowEdges.length} edges for ${flowNodes.length} nodes`);
       console.log('Sample edge:', flowEdges[0]);
       console.log('All edges:', flowEdges);
+      console.log('Setting nodes:', flowNodes.length);
+      console.log('Setting edges:', flowEdges.length);
 
     setNodes(flowNodes);
     setEdges(flowEdges);
+    
+    console.log('✅ Nodes and edges set successfully');
   };
 
   // Apply filters
@@ -542,6 +546,14 @@ const DataLineagePage = () => {
     const sourceExists = filteredNodes.find(n => n.id === edge.source);
     const targetExists = filteredNodes.find(n => n.id === edge.target);
     return sourceExists && targetExists;
+  });
+  
+  console.log('🔍 Rendering:', { 
+    totalNodes: nodes.length, 
+    filteredNodes: filteredNodes.length, 
+    totalEdges: edges.length, 
+    filteredEdges: filteredEdges.length,
+    sampleEdge: filteredEdges[0]
   });
 
   // Get unique types and sources for filters
