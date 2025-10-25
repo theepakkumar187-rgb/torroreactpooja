@@ -536,8 +536,21 @@ const DataLineagePage = () => {
       console.log('Setting nodes:', flowNodes.length);
       console.log('Setting edges:', flowEdges.length);
 
+    console.log('⚡ About to set nodes and edges:', {
+      nodesCount: flowNodes.length,
+      edgesCount: flowEdges.length,
+      nodeIds: flowNodes.map(n => n.id),
+      edges: flowEdges.map(e => ({ id: e.id, source: e.source, target: e.target }))
+    });
+    
     setNodes(flowNodes);
     setEdges(flowEdges);
+    
+    // Force a re-render after a short delay
+    setTimeout(() => {
+      console.log('🔄 Force re-render edges');
+      setEdges([...flowEdges]);
+    }, 100);
     
     console.log('✅ Nodes and edges set successfully');
   };
