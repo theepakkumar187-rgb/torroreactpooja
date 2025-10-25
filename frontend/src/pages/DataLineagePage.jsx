@@ -60,7 +60,11 @@ const CustomNode = ({ data }) => {
   const isSelected = data.isSelected;
   
   return (
-    <Box
+    <>
+      <Handle type="target" position={Position.Left} style={{ display: 'none' }} />
+      <Handle type="source" position={Position.Right} style={{ display: 'none' }} />
+      
+      <Box
         sx={{
           px: 3,
           py: 2,
@@ -109,7 +113,7 @@ const CustomNode = ({ data }) => {
           }} 
         />
       </Box>
-    </Box>
+    </>
   );
 };
 
@@ -169,6 +173,8 @@ const DataLineagePage = () => {
         id: node.id,
         type: 'custom',
         position: node.position,
+        sourcePosition: 'right',
+        targetPosition: 'left',
         data: {
           label: node.name,
           name: node.name,
@@ -192,7 +198,8 @@ const DataLineagePage = () => {
           source: edge.source,
           target: edge.target,
           type: 'smoothstep',
-          animated: true,
+          animated: columnCount > 0,
+          strokeDasharray: columnCount > 0 ? '0' : '5,5',
           markerEnd: {
             type: MarkerType.ArrowClosed,
             width: 20,
@@ -434,6 +441,8 @@ const DataLineagePage = () => {
         id: node.id,
         type: 'custom',
         position: node.position,
+        sourcePosition: 'right',
+        targetPosition: 'left',
         data: {
           label: node.name,
           name: node.name,
@@ -463,6 +472,7 @@ const DataLineagePage = () => {
         targetHandle: null,
         type: 'smoothstep',
         animated: columnCount > 0,
+        strokeDasharray: columnCount > 0 ? '0' : '5,5',
         markerEnd: {
           type: MarkerType.ArrowClosed,
           color: '#1976d2',
@@ -491,8 +501,9 @@ const DataLineagePage = () => {
       };
     });
 
-    console.log(`✅ Created ${flowEdges.length} edges for ${flowNodes.length} nodes`);
-    console.log('Sample edge:', flowEdges[0]);
+      console.log(`✅ Created ${flowEdges.length} edges for ${flowNodes.length} nodes`);
+      console.log('Sample edge:', flowEdges[0]);
+      console.log('All edges:', flowEdges);
 
     setNodes(flowNodes);
     setEdges(flowEdges);
