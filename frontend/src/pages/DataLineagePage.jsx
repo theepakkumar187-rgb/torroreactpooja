@@ -9,6 +9,7 @@ import ReactFlow, {
   Panel,
   Handle,
   Position,
+  ConnectionLineType,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import {
@@ -811,7 +812,13 @@ const DataLineagePage = () => {
               type: 'smoothstep',
               animated: true,
               style: { strokeWidth: 6, stroke: '#1976d2' },
+              markerEnd: { type: MarkerType.ArrowClosed, color: '#1976d2' },
             }}
+            connectionLineType={ConnectionLineType.SmoothStep}
+            proOptions={{ hideAttribution: true }}
+            elementsSelectable={true}
+            nodesConnectable={false}
+            nodesDraggable={true}
             attributionPosition="bottom-left"
           >
             <Background color="#aaa" gap={16} />
