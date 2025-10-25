@@ -222,8 +222,9 @@ const DataLineagePage = () => {
             color: '#1976d2',
           },
           style: {
-            strokeWidth: 4,
+            strokeWidth: 8,
             stroke: '#1976d2',
+            strokeOpacity: 1,
           },
           label: label,
           labelStyle: { 
@@ -508,8 +509,9 @@ const DataLineagePage = () => {
           color: '#1976d2',
         },
         style: {
-          strokeWidth: 6,
+          strokeWidth: 8,
           stroke: '#1976d2',
+          strokeOpacity: 1,
         },
         label: label,
         labelStyle: { 
@@ -811,8 +813,8 @@ const DataLineagePage = () => {
             defaultEdgeOptions={{
               type: 'smoothstep',
               animated: true,
-              style: { strokeWidth: 6, stroke: '#1976d2' },
-              markerEnd: { type: MarkerType.ArrowClosed, color: '#1976d2' },
+              style: { strokeWidth: 8, stroke: '#1976d2', strokeOpacity: 1 },
+              markerEnd: { type: MarkerType.ArrowClosed, color: '#1976d2', width: 20, height: 20 },
             }}
             connectionLineType={ConnectionLineType.SmoothStep}
             proOptions={{ hideAttribution: true }}
