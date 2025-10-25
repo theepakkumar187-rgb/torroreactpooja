@@ -445,10 +445,17 @@ const DataLineagePage = () => {
 
     // Re-layout the filtered graph
     const layoutedNodes = layoutNodes(filteredNodes, filteredEdges);
+    
+    // Create a mapping from original node ID to flow node ID
+    const nodeIdMap = new Map();
+    
     const flowNodes = layoutedNodes.map((node, index) => {
       const originalNode = filteredNodes.find(n => n.id === node.id);
+      const flowNodeId = `${node.id}-${index}`;
+      nodeIdMap.set(node.id, flowNodeId); // Map original ID to flow ID
+      
       return {
-        id: `${node.id}-${index}`, // Ensure unique keys
+        id: flowNodeId,
         type: 'custom',
         position: node.position,
         sourcePosition: 'right',
@@ -474,19 +481,24 @@ const DataLineagePage = () => {
         ? `${columnCount} columns` 
         : edge.relationship || 'feeds into';
       
-      // Find the corresponding flow node IDs
-      const sourceNode = flowNodes.find(n => n.data.id === edge.source);
-      const targetNode = flowNodes.find(n => n.data.id === edge.target);
+      // Use the nodeIdMap to get the correct flow node IDs
+      const sourceFlowId = nodeIdMap.get(edge.source);
+      const targetFlowId = nodeIdMap.get(edge.target);
       
-      if (!sourceNode || !targetNode) {
-        console.warn(`Edge ${index} skipped: source or target node not found`, { source: edge.source, target: edge.target });
+      if (!sourceFlowId || !targetFlowId) {
+        console.warn(`Edge ${index} skipped: source or target node not found in map`, { 
+          source: edge.source, 
+          target: edge.target,
+          sourceFlowId,
+          targetFlowId 
+        });
         return null;
       }
       
       return {
-        id: `${edge.source}->${edge.target}`,
-        source: sourceNode.id,
-        target: targetNode.id,
+        id: `edge-${index}`,
+        source: sourceFlowId,
+        target: targetFlowId,
         sourceHandle: null,
         targetHandle: null,
         type: 'smoothstep',
