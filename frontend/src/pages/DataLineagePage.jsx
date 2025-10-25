@@ -579,13 +579,16 @@ const DataLineagePage = () => {
           <Grid container spacing={2} alignItems="center">
             <Grid item xs={12} md={5}>
               <Autocomplete
-                options={fullLineageData.rawData?.nodes ? fullLineageData.rawData.nodes.map(n => ({
+                options={fullLineageData.rawData?.nodes ? fullLineageData.rawData.nodes.map((n, idx) => ({
                   id: n.id,
+                  uniqueKey: `${n.id}-${idx}`,
                   label: `${n.name} (${n.type})`,
                   name: n.name,
                   type: n.type,
                   source: n.source_system,
                 })) : []}
+                getOptionLabel={(option) => option.label || ''}
+                isOptionEqualToValue={(option, value) => option.id === value.id}
                 value={fullLineageData.rawData?.nodes?.find(n => n.id === selectedAssetForLineage) ? {
                   id: selectedAssetForLineage,
                   label: fullLineageData.rawData.nodes.find(n => n.id === selectedAssetForLineage)?.name,
@@ -614,7 +617,7 @@ const DataLineagePage = () => {
                   />
                 )}
                 renderOption={(props, option) => (
-                  <li {...props}>
+                  <li {...props} key={option.uniqueKey}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
                       <DataObject sx={{ fontSize: 18, color: option.type === 'View' ? '#8FA0F5' : '#4caf50' }} />
                       <Box sx={{ flex: 1 }}>
