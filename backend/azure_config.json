@@ -1,0 +1,40 @@
+{
+  "azure_purview": {
+    "default_settings": {
+      "extraction_interval": "daily",
+      "asset_types": [
+        "azure_sql_table",
+        "azure_sql_database",
+        "azure_storage_blob",
+        "azure_data_factory_pipeline",
+        "azure_synapse_workspace",
+        "azure_databricks_workspace"
+      ],
+      "max_assets_per_extraction": 1000,
+      "retry_attempts": 3,
+      "retry_delay_seconds": 30
+    },
+    "scheduled_extractions": {
+      "hourly": {
+        "enabled": false,
+        "asset_types": ["azure_sql_table", "azure_storage_blob"]
+      },
+      "daily": {
+        "enabled": true,
+        "time": "02:00",
+        "asset_types": "all"
+      },
+      "weekly": {
+        "enabled": false,
+        "day": "monday",
+        "time": "02:00",
+        "asset_types": "all"
+      }
+    },
+    "connection_settings": {
+      "timeout_seconds": 30,
+      "max_connections": 10,
+      "connection_pool_size": 5
+    }
+  }
+}
