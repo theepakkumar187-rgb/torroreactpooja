@@ -171,7 +171,7 @@ const DataLineagePage = () => {
       // For autocomplete dropdown, we need nodes but not displayed
       const layoutedNodes = layoutNodes(data.nodes, data.edges);
       const flowNodes = layoutedNodes.map((node, index) => ({
-        id: node.id,
+        id: `${node.id}-${index}`, // Ensure unique keys
         type: 'custom',
         position: node.position,
         sourcePosition: 'right',
@@ -194,10 +194,19 @@ const DataLineagePage = () => {
           ? `${columnCount} columns` 
           : edge.relationship || 'feeds into';
         
+        // Find the corresponding flow node IDs
+        const sourceNode = flowNodes.find(n => n.data.id === edge.source);
+        const targetNode = flowNodes.find(n => n.data.id === edge.target);
+        
+        if (!sourceNode || !targetNode) {
+          console.warn(`Edge ${index} skipped: source or target node not found`, { source: edge.source, target: edge.target });
+          return null;
+        }
+        
         return {
           id: `edge-${index}`,
-          source: edge.source,
-          target: edge.target,
+          source: sourceNode.id,
+          target: targetNode.id,
           type: 'smoothstep',
           animated: columnCount > 0,
           strokeDasharray: columnCount > 0 ? '0' : '5,5',
@@ -224,7 +233,7 @@ const DataLineagePage = () => {
             onEdgeClick: handleEdgeClick,
           },
         };
-      });
+      }).filter(edge => edge !== null); // Filter out null edges
 
       // Store for dropdown and future use, but don't display by default
       setFullLineageData({ nodes: flowNodes, edges: flowEdges, rawData: data });
@@ -436,10 +445,10 @@ const DataLineagePage = () => {
 
     // Re-layout the filtered graph
     const layoutedNodes = layoutNodes(filteredNodes, filteredEdges);
-    const flowNodes = layoutedNodes.map((node) => {
+    const flowNodes = layoutedNodes.map((node, index) => {
       const originalNode = filteredNodes.find(n => n.id === node.id);
       return {
-        id: node.id,
+        id: `${node.id}-${index}`, // Ensure unique keys
         type: 'custom',
         position: node.position,
         sourcePosition: 'right',
@@ -465,10 +474,19 @@ const DataLineagePage = () => {
         ? `${columnCount} columns` 
         : edge.relationship || 'feeds into';
       
+      // Find the corresponding flow node IDs
+      const sourceNode = flowNodes.find(n => n.data.id === edge.source);
+      const targetNode = flowNodes.find(n => n.data.id === edge.target);
+      
+      if (!sourceNode || !targetNode) {
+        console.warn(`Edge ${index} skipped: source or target node not found`, { source: edge.source, target: edge.target });
+        return null;
+      }
+      
       return {
         id: `${edge.source}->${edge.target}`,
-        source: edge.source,
-        target: edge.target,
+        source: sourceNode.id,
+        target: targetNode.id,
         sourceHandle: null,
         targetHandle: null,
         type: 'smoothstep',
@@ -500,7 +518,7 @@ const DataLineagePage = () => {
           onEdgeClick: handleEdgeClick,
         },
       };
-    });
+    }).filter(edge => edge !== null); // Filter out null edges
 
       console.log(`✅ Created ${flowEdges.length} edges for ${flowNodes.length} nodes`);
       console.log('Sample edge:', flowEdges[0]);
