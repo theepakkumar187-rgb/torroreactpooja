@@ -60,11 +60,7 @@ const CustomNode = ({ data }) => {
   const isSelected = data.isSelected;
   
   return (
-    <>
-      <Handle type="target" position={Position.Left} style={{ background: '#8FA0F5', width: 12, height: 12 }} />
-      <Handle type="source" position={Position.Right} style={{ background: '#4caf50', width: 12, height: 12 }} />
-      
-      <Box
+    <Box
         sx={{
           px: 3,
           py: 2,
@@ -114,7 +110,6 @@ const CustomNode = ({ data }) => {
         />
       </Box>
     </Box>
-    </>
   );
 };
 
@@ -174,8 +169,6 @@ const DataLineagePage = () => {
         id: node.id,
         type: 'custom',
         position: node.position,
-        sourcePosition: 'right',
-        targetPosition: 'left',
         data: {
           label: node.name,
           name: node.name,
@@ -204,19 +197,19 @@ const DataLineagePage = () => {
             type: MarkerType.ArrowClosed,
             width: 20,
             height: 20,
-            color: columnCount > 0 ? '#4caf50' : '#8FA0F5',
+            color: '#1976d2',
           },
           style: {
             strokeWidth: columnCount > 0 ? 3 : 2,
-            stroke: columnCount > 0 ? '#4caf50' : '#8FA0F5',
+            stroke: '#1976d2',
           },
           label: label,
           labelStyle: { 
-            fill: columnCount > 0 ? '#2e7d32' : '#6b7280', 
+            fill: '#ffffff', 
             fontWeight: 700, 
             fontSize: 12 
           },
-          labelBgStyle: { fill: '#ffffff', fillOpacity: 0.95 },
+          labelBgStyle: { fill: '#1976d2', fillOpacity: 0.9 },
           data: {
             column_lineage: edge.column_lineage || [],
             relationship: edge.relationship,
@@ -441,8 +434,6 @@ const DataLineagePage = () => {
         id: node.id,
         type: 'custom',
         position: node.position,
-        sourcePosition: 'right',
-        targetPosition: 'left',
         data: {
           label: node.name,
           name: node.name,
@@ -474,11 +465,11 @@ const DataLineagePage = () => {
         animated: columnCount > 0,
         markerEnd: {
           type: MarkerType.ArrowClosed,
-          color: columnCount > 0 ? '#4caf50' : '#8FA0F5',
+          color: '#1976d2',
         },
         style: {
           strokeWidth: columnCount > 0 ? 5 : 3,
-          stroke: columnCount > 0 ? '#4caf50' : '#8FA0F5',
+          stroke: '#1976d2',
         },
         label: label,
         labelStyle: { 
@@ -487,7 +478,7 @@ const DataLineagePage = () => {
           fontSize: 10 
         },
         labelBgStyle: { 
-          fill: columnCount > 0 ? '#4caf50' : '#8FA0F5', 
+          fill: '#1976d2', 
           fillOpacity: 0.9,
           padding: '2px 6px',
           borderRadius: '4px' 
@@ -768,8 +759,8 @@ const DataLineagePage = () => {
                     <Typography variant="caption">Selected</Typography>
                   </Box>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Box sx={{ width: 16, height: 2, backgroundColor: '#4caf50' }} />
-                    <Typography variant="caption">Column Flow</Typography>
+                    <Box sx={{ width: 16, height: 2, backgroundColor: '#1976d2' }} />
+                    <Typography variant="caption">Data Flow</Typography>
                   </Box>
                 </Box>
               </Card>
