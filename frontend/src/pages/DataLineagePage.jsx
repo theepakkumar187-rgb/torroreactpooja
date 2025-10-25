@@ -113,6 +113,7 @@ const CustomNode = ({ data }) => {
           }} 
         />
       </Box>
+    </Box>
     </>
   );
 };
