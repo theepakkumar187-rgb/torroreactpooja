@@ -42,18 +42,43 @@ const Header = ({ onRefresh, onMenuClick }) => {
         >
           <Menu />
         </IconButton>
-        <Typography 
-          variant="h6" 
-          component="div" 
-          sx={{ 
-            flexGrow: 1, 
-            fontWeight: 'bold',
-            fontSize: '1.25rem',
-            color: 'white'
-          }}
-        >
-          Torro Data Intelligence Platform
-        </Typography>
+        
+        {/* Logo and Title */}
+        <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1, gap: 2 }}>
+          <img 
+            src="/torro-logo.svg" 
+            alt="Torro Logo" 
+            style={{ 
+              height: '40px', 
+              width: '40px'
+            }} 
+          />
+          <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+            <Typography 
+              variant="h5" 
+              component="div" 
+              sx={{ 
+                fontWeight: 'bold',
+                fontSize: '1.5rem',
+                color: 'white',
+                lineHeight: 1.2,
+                letterSpacing: '0.5px'
+              }}
+            >
+              TORRO
+            </Typography>
+            <Typography 
+              variant="caption" 
+              sx={{ 
+                color: 'rgba(255, 255, 255, 0.8)',
+                fontSize: '0.7rem',
+                letterSpacing: '1px'
+              }}
+            >
+              Data Intelligence Platform
+            </Typography>
+          </Box>
+        </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Chip
             icon={<CheckCircle sx={{ fontSize: 16 }} />}
