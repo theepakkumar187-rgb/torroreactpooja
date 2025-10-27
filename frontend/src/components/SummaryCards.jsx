@@ -21,7 +21,7 @@ const SummaryCards = ({ stats }) => {
   const cards = [
     {
       title: 'Total Assets',
-      value: stats.total_assets,
+      value: stats.total_assets || 0,
       subtitle: 'Assets Found',
       icon: <DataObject sx={{ fontSize: 24, color: 'primary.main' }} />,
       color: 'primary',

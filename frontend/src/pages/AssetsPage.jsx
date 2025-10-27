@@ -29,6 +29,8 @@ import {
   Divider,
   Alert,
   CircularProgress,
+  Pagination,
+  Stack,
 } from '@mui/material';
 import {
   Search,
@@ -51,17 +53,101 @@ const AssetsPage = () => {
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize, setPageSize] = useState(50);
+  const [totalAssets, setTotalAssets] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [allAssets, setAllAssets] = useState([]); // For filters
+  const [bigqueryTotal, setBigqueryTotal] = useState(0);
+  const [starburstTotal, setStarburstTotal] = useState(0);
 
   useEffect(() => {
     fetchAssets();
-  }, []);
+  }, [currentPage, pageSize, searchTerm, typeFilter, catalogFilter]);
+
+  // Fetch totals separately (only when no filters are applied)
+  useEffect(() => {
+    if (!searchTerm && !typeFilter && !catalogFilter) {
+      fetchTotals();
+    }
+  }, [searchTerm, typeFilter, catalogFilter]);
+
+  const fetchTotals = async () => {
+    try {
+      // Backend limits size to 100; page through results to compute totals safely
+      let page = 0;
+      const size = 100;
+      let fetchedAll = false;
+      let bigqueryCount = 0;
+      let starburstCount = 0;
+      const aggregatedAssets = [];
+
+      while (!fetchedAll) {
+        const resp = await fetch(`http://localhost:8000/api/assets?page=${page}&size=${size}`);
+        if (!resp.ok) {
+          // Stop early on HTTP errors
+          throw new Error(`HTTP ${resp.status}`);
+        }
+        const data = await resp.json();
+        const assetsPage = Array.isArray(data.assets) ? data.assets : [];
+
+        // Accumulate counts and assets for filters
+        for (const asset of assetsPage) {
+          const id = asset?.connector_id || '';
+          if (id.startsWith('bq_')) bigqueryCount += 1;
+          else if (id.startsWith('starburst_')) starburstCount += 1;
+        }
+        aggregatedAssets.push(...assetsPage);
+
+        // Determine if there are more pages
+        const hasNext = Boolean(data?.pagination?.has_next);
+        if (hasNext) {
+          page += 1;
+        } else {
+          fetchedAll = true;
+        }
+      }
+
+      console.log('✅ Totals fetched:', { bigqueryCount, starburstCount, totalAssets: aggregatedAssets.length });
+      setBigqueryTotal(bigqueryCount);
+      setStarburstTotal(starburstCount);
+      setAllAssets(aggregatedAssets); // For filter dropdowns
+    } catch (error) {
+      console.error('Error fetching totals:', error);
+      // Fallback to zeros to avoid UI crashes
+      setBigqueryTotal(0);
+      setStarburstTotal(0);
+      setAllAssets([]);
+    }
+  };
 
   const fetchAssets = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:8000/api/assets');
+      
+      // Build query parameters
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        size: pageSize.toString(),
+      });
+      
+      if (searchTerm) params.append('search', searchTerm);
+      if (catalogFilter) params.append('catalog', catalogFilter);
+      if (typeFilter) params.append('asset_type', typeFilter);
+      
+      const response = await fetch(`http://localhost:8000/api/assets?${params}`);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
       const data = await response.json();
-      setAssets(data);
+      const assetsList = Array.isArray(data.assets) ? data.assets : [];
+      const pagination = data?.pagination || { total: 0, total_pages: 0 };
+      
+      setAssets(assetsList);
+      setTotalAssets(pagination.total || assetsList.length);
+      setTotalPages(pagination.total_pages || 0);
     } catch (error) {
       console.error('Error fetching assets:', error);
     } finally {
@@ -69,28 +155,15 @@ const AssetsPage = () => {
     }
   };
 
-  const filteredAssets = assets.filter(asset => {
-    const matchesSearch = asset.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         asset.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         asset.catalog.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = !typeFilter || asset.type === typeFilter;
-    const matchesCatalog = !catalogFilter || asset.catalog === catalogFilter;
-    
-    return matchesSearch && matchesType && matchesCatalog;
-  });
-
-  const uniqueTypes = [...new Set(assets.map(asset => asset.type))];
-  const uniqueCatalogs = [...new Set(assets.map(asset => asset.catalog))];
+  // Get unique types and catalogs for filter dropdowns
+  const uniqueTypes = [...new Set(allAssets.map(asset => asset.type))];
+  const uniqueCatalogs = [...new Set(allAssets.map(asset => asset.catalog))];
   
-  // Count assets from BigQuery data source
-  const bigqueryAssets = assets.filter(asset => 
-    asset.connector_id && asset.connector_id.startsWith('bq_')
-  );
+  // Count assets from BigQuery data source (use stored totals)
+  const bigqueryAssets = bigqueryTotal;
   
-  // Count assets from Starburst Galaxy data source
-  const starburstAssets = assets.filter(asset => 
-    asset.connector_id && asset.connector_id.startsWith('starburst_')
-  );
+  // Count assets from Starburst Galaxy data source (use stored totals)
+  const starburstAssets = starburstTotal;
 
   const getDataSource = (connectorId) => {
     if (!connectorId) return 'Unknown';
@@ -133,6 +206,32 @@ const AssetsPage = () => {
     setActiveTab(newValue);
   };
 
+  // Pagination handlers
+  const handlePageChange = (event, page) => {
+    setCurrentPage(page - 1); // Convert to 0-based
+  };
+
+  const handlePageSizeChange = (event) => {
+    setPageSize(event.target.value);
+    setCurrentPage(0); // Reset to first page
+  };
+
+  // Search and filter handlers
+  const handleSearchChange = (event) => {
+    setSearchTerm(event.target.value);
+    setCurrentPage(0); // Reset to first page
+  };
+
+  const handleTypeFilterChange = (event) => {
+    setTypeFilter(event.target.value);
+    setCurrentPage(0); // Reset to first page
+  };
+
+  const handleCatalogFilterChange = (event) => {
+    setCatalogFilter(event.target.value);
+    setCurrentPage(0); // Reset to first page
+  };
+
   const formatBytes = (bytes) => {
     if (!bytes) return '0 Bytes';
     const k = 1024;
@@ -156,7 +255,12 @@ const AssetsPage = () => {
           <Button
             variant="outlined"
             startIcon={<Refresh />}
-            onClick={fetchAssets}
+            onClick={() => {
+              fetchAssets();
+              if (!searchTerm && !typeFilter && !catalogFilter) {
+                fetchTotals();
+              }
+            }}
             disabled={loading}
           >
             Refresh
@@ -172,7 +276,7 @@ const AssetsPage = () => {
       </Box>
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={6} md={6}>
+        <Grid item xs={12} sm={6} md={4}>
           <Card>
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
@@ -180,7 +284,7 @@ const AssetsPage = () => {
                 <Typography variant="h6">Total Assets</Typography>
               </Box>
               <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
-                {assets.length}
+                {totalAssets}
               </Typography>
             </CardContent>
           </Card>
@@ -193,7 +297,7 @@ const AssetsPage = () => {
                 <Typography variant="h6">BigQuery Assets</Typography>
               </Box>
               <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
-                {bigqueryAssets.length}
+                {bigqueryAssets}
               </Typography>
             </CardContent>
           </Card>
@@ -206,7 +310,7 @@ const AssetsPage = () => {
                 <Typography variant="h6">Starburst Assets</Typography>
               </Box>
               <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
-                {starburstAssets.length}
+                {starburstAssets}
               </Typography>
             </CardContent>
           </Card>
@@ -217,19 +321,19 @@ const AssetsPage = () => {
         <CardContent>
           <Grid container spacing={2} alignItems="center">
             <Grid item xs={12} md={4}>
-              <TextField
-                fullWidth
-                placeholder="Search assets..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Search />
-                    </InputAdornment>
-                  ),
-                }}
-              />
+                <TextField
+                  fullWidth
+                  placeholder="Search assets..."
+                  value={searchTerm}
+                  onChange={handleSearchChange}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Search />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
             </Grid>
             <Grid item xs={12} md={3}>
               <FormControl fullWidth>
@@ -237,7 +341,7 @@ const AssetsPage = () => {
                 <Select
                   value={typeFilter}
                   label="Type"
-                  onChange={(e) => setTypeFilter(e.target.value)}
+                  onChange={handleTypeFilterChange}
                 >
                   <MenuItem value="">All Types</MenuItem>
                   {uniqueTypes.map(type => (
@@ -252,7 +356,7 @@ const AssetsPage = () => {
                 <Select
                   value={catalogFilter}
                   label="Catalog"
-                  onChange={(e) => setCatalogFilter(e.target.value)}
+                  onChange={handleCatalogFilterChange}
                 >
                   <MenuItem value="">All Catalogs</MenuItem>
                   {uniqueCatalogs.map(catalog => (
@@ -270,6 +374,7 @@ const AssetsPage = () => {
                   setSearchTerm('');
                   setTypeFilter('');
                   setCatalogFilter('');
+                  setCurrentPage(0);
                 }}
               >
                 Clear
@@ -282,7 +387,7 @@ const AssetsPage = () => {
       <Card>
         <CardContent>
           <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, fontFamily: 'Comfortaa' }}>
-            Asset Inventory ({filteredAssets.length} assets)
+            Asset Inventory ({totalAssets} assets)
           </Typography>
           <TableContainer>
             <Table>
@@ -297,7 +402,7 @@ const AssetsPage = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {filteredAssets.map((asset) => (
+                {assets.map((asset) => (
                   <TableRow key={asset.id}>
                     <TableCell>
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -346,6 +451,39 @@ const AssetsPage = () => {
               </TableBody>
             </Table>
           </TableContainer>
+          
+          {/* Pagination Controls */}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 3, px: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Typography variant="body2" color="text.secondary">
+                Showing {assets.length} of {totalAssets} assets
+              </Typography>
+              <FormControl size="small" sx={{ minWidth: 80 }}>
+                <Select
+                  value={pageSize}
+                  onChange={handlePageSizeChange}
+                  displayEmpty
+                >
+                  <MenuItem value={25}>25</MenuItem>
+                  <MenuItem value={50}>50</MenuItem>
+                  <MenuItem value={100}>100</MenuItem>
+                </Select>
+              </FormControl>
+              <Typography variant="body2" color="text.secondary">
+                per page
+              </Typography>
+            </Box>
+            
+            <Pagination
+              count={totalPages}
+              page={currentPage + 1}
+              onChange={handlePageChange}
+              color="primary"
+              showFirstButton
+              showLastButton
+              disabled={loading}
+            />
+          </Box>
         </CardContent>
       </Card>
 

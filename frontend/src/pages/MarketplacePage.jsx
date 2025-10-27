@@ -36,6 +36,9 @@ import {
   Select,
   MenuItem,
   InputLabel,
+  Autocomplete,
+  Menu,
+  ListItemIcon,
 } from '@mui/material';
 import {
   ArrowBack,
@@ -45,6 +48,11 @@ import {
   Add,
   Delete,
   Publish,
+  AutoAwesome,
+  Security,
+  ArrowDropDown,
+  Folder,
+  Schema,
 } from '@mui/icons-material';
 
 const MarketplacePage = () => {
@@ -59,15 +67,45 @@ const MarketplacePage = () => {
   // Tag management states
   const [columnTagDialogOpen, setColumnTagDialogOpen] = useState(false);
   const [tableTagDialogOpen, setTableTagDialogOpen] = useState(false);
+  const [catalogTagDialogOpen, setCatalogTagDialogOpen] = useState(false);
+  const [schemaTagDialogOpen, setSchemaTagDialogOpen] = useState(false);
   const [selectedColumn, setSelectedColumn] = useState(null);
   const [selectedColumnForTag, setSelectedColumnForTag] = useState('');
   const [newTag, setNewTag] = useState('');
+  const [catalogTag, setCatalogTag] = useState(null);
+  const [schemaTag, setSchemaTag] = useState(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [publishing, setPublishing] = useState(false);
   const [sqlDialogOpen, setSqlDialogOpen] = useState(false);
   const [sqlCommands, setSqlCommands] = useState([]);
   const [billingInfo, setBillingInfo] = useState({ requiresBilling: false, message: '' });
+  const [recommendedTagsDialogOpen, setRecommendedTagsDialogOpen] = useState(false);
+  const [recommendedTags, setRecommendedTags] = useState({});
+  const [existingTags, setExistingTags] = useState([]);
+  const [piiDialogOpen, setPiiDialogOpen] = useState(false);
+  const [selectedColumnForPii, setSelectedColumnForPii] = useState(null);
+  const [tagMenuAnchor, setTagMenuAnchor] = useState(null);
+
+  // Fetch existing tags
+  const fetchExistingTags = async () => {
+    try {
+      let apiUrl = '';
+      if (resourceType === 'GCP') {
+        apiUrl = 'http://localhost:8000/api/bigquery/all-tags';
+      } else if (resourceType === 'Starburst Galaxy') {
+        apiUrl = 'http://localhost:8000/api/starburst/all-tags';
+      }
+      
+      if (apiUrl) {
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+        setExistingTags(data.tags || []);
+      }
+    } catch (err) {
+      console.error('Error fetching existing tags:', err);
+    }
+  };
 
   const handleSearch = async () => {
     if (!gcpProject || !dataset || !tableName) {
@@ -130,15 +168,30 @@ const MarketplacePage = () => {
       }
 
       if (!response.ok) {
-        throw new Error('Failed to fetch table details');
+        // Try to get error details from the response
+        let errorMessage = 'Failed to fetch table details';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.detail || errorData.message || `Server error: ${response.status}`;
+        } catch (e) {
+          errorMessage = `Server error: ${response.status} ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
       setTableData(data);
+      
+      // Set loading to false AFTER setting table data
+      setLoading(false);
+      
+      // Fetch existing tags for autocomplete (don't block on this)
+      fetchExistingTags().catch(err => {
+        console.error('Error fetching existing tags:', err);
+      });
     } catch (err) {
       console.error('API call failed:', err.message);
       setError(`Failed to fetch table details: ${err.message}`);
-    } finally {
       setLoading(false);
     }
   };
@@ -157,10 +210,29 @@ const MarketplacePage = () => {
     setTableTagDialogOpen(true);
   };
 
+  const handleAddCatalogTag = () => {
+    setCatalogTagDialogOpen(true);
+  };
+
+  const handleAddSchemaTag = () => {
+    setSchemaTagDialogOpen(true);
+  };
+
   const handleAddTag = () => {
     if (!newTag.trim()) return;
 
-    if (selectedColumnForTag) {
+    // Determine which dialog is open and handle accordingly
+    if (catalogTagDialogOpen) {
+      // Add tag at catalog level - store separately, NOT in columns
+      setCatalogTag(newTag.trim());
+      setSnackbarMessage(`Tag "${newTag}" will be applied to catalog "${gcpProject}"`);
+      setCatalogTagDialogOpen(false);
+    } else if (schemaTagDialogOpen) {
+      // Add tag at schema level - store separately, NOT in columns
+      setSchemaTag(newTag.trim());
+      setSnackbarMessage(`Tag "${newTag}" will be applied to schema "${dataset}"`);
+      setSchemaTagDialogOpen(false);
+    } else if (selectedColumnForTag) {
       // Add tag to specific column
       const updatedColumns = tableData.columns.map(col => 
         col.name === selectedColumnForTag 
@@ -169,20 +241,21 @@ const MarketplacePage = () => {
       );
       setTableData({ ...tableData, columns: updatedColumns });
       setSnackbarMessage(`Tag "${newTag}" added to column "${selectedColumnForTag}"`);
+      setColumnTagDialogOpen(false);
     } else {
-      // Add tag to all columns (table-level tag)
-      const updatedColumns = tableData.columns.map(col => ({
-        ...col,
-        tags: [...(col.tags || []), newTag.trim()]
-      }));
-      setTableData({ ...tableData, columns: updatedColumns });
-      setSnackbarMessage(`Tag "${newTag}" added to all columns`);
+      // Add tag as table-level tag
+      const tableTags = tableData.tableTags || [];
+      const updatedTableData = {
+        ...tableData,
+        tableTags: [...tableTags, newTag.trim()]
+      };
+      setTableData(updatedTableData);
+      setSnackbarMessage(`Tag "${newTag}" added to table "${tableData.tableName}"`);
+      setTableTagDialogOpen(false);
     }
 
     setNewTag('');
     setSelectedColumnForTag('');
-    setColumnTagDialogOpen(false);
-    setTableTagDialogOpen(false);
     setSnackbarOpen(true);
   };
 
@@ -190,10 +263,14 @@ const MarketplacePage = () => {
     if (!tableData) return;
 
     setPublishing(true);
+    console.log(`🚀 Starting publish operation for ${resourceType} table: ${tableName}`);
+    console.log(`📊 Publishing ${tableData.columns.length} columns with tags...`);
+    
     try {
       let response;
       
       if (resourceType === 'GCP') {
+        console.log('📝 Preparing BigQuery publish request...');
         // Prepare the data for BigQuery publishing
         const publishData = {
           projectId: gcpProject,
@@ -201,10 +278,14 @@ const MarketplacePage = () => {
           tableId: tableName,
           columns: tableData.columns.map(col => ({
             name: col.name,
-            tags: col.tags || []
-          }))
+            tags: col.tags || [],
+            piiFound: col.piiFound || false,
+            piiType: col.piiType || ''
+          })),
+          tableTags: tableData.tableTags || []  // Add table-level tags
         };
 
+        console.log(`📤 Sending publish request to BigQuery API for ${publishData.projectId}.${publishData.datasetId}.${publishData.tableId}...`);
         response = await fetch('http://localhost:8000/api/bigquery/publish-tags', {
           method: 'POST',
           headers: {
@@ -212,7 +293,13 @@ const MarketplacePage = () => {
           },
           body: JSON.stringify(publishData),
         });
+        console.log('📥 BigQuery API response received');
       } else if (resourceType === 'Starburst Galaxy') {
+        console.log('📝 Preparing Starburst Galaxy publish request...');
+        // Use table-level tags for table tag
+        // For now, just send table tag from tableData.tableTags
+        const tableTag = tableData.tableTags?.[0] || null;
+        
         // Prepare the data for Starburst publishing
         const publishData = {
           catalog: gcpProject,
@@ -220,17 +307,25 @@ const MarketplacePage = () => {
           tableId: tableName,
           columnTags: tableData.columns.map(col => ({
             columnName: col.name,
-            tags: col.tags || []
-          }))
+            tags: col.tags || [],
+            piiFound: col.piiFound || false,
+            piiType: col.piiType || ''
+          })),
+          catalogTag: catalogTag, // Pass catalog-level tag
+          schemaTag: schemaTag,    // Pass schema-level tag
+          tableTag: tableTag        // Pass table-level tag
         };
 
+        console.log(`📤 Sending publish request to Starburst API for ${publishData.catalog}.${publishData.schema}.${publishData.tableId}...`);
         response = await fetch('http://localhost:8000/api/starburst/publish-tags', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(publishData),
+          signal: AbortSignal.timeout(60000), // 60 second timeout
         });
+        console.log('📥 Starburst API response received');
       } else if (resourceType === 'Azure Purview') {
         // Azure Purview tag publishing (placeholder - would need specific implementation)
         throw new Error('Azure Purview tag publishing is not yet implemented');
@@ -239,42 +334,291 @@ const MarketplacePage = () => {
       }
 
       if (!response.ok) {
-        throw new Error(`Failed to publish tags to ${resourceType}`);
+        // Try to get the detailed error message from the backend
+        let errorMessage = `Failed to publish tags to ${resourceType}`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.detail || errorData.message || errorMessage;
+        } catch (e) {
+          errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
       }
 
       const result = await response.json();
-      setSqlCommands(result.sqlCommands || []);
-      setBillingInfo({
-        requiresBilling: result.requiresBilling || false,
-        message: result.billingMessage || ''
-      });
-      setSqlDialogOpen(true);
+      console.log('✅ Publish operation completed:', result);
+      
+      // Check if the operation was successful
+      if (!result.success) {
+        console.warn('⚠️ Publish operation failed:', result.message);
+        // Handle failure case
+        setBillingInfo({
+          requiresBilling: result.requiresBilling || false,
+          message: result.billingMessage || result.message || 'Operation failed. Please check your configuration.'
+        });
+        setSqlDialogOpen(true);
+      } else {
+        console.log('🎉 Tags published successfully! Opening SQL dialog...');
+        // Handle success case
+        setSqlCommands(result.sqlCommands || []);
+        setBillingInfo({
+          requiresBilling: result.requiresBilling || false,
+          message: result.billingMessage || 'Operation completed successfully.'
+        });
+        setSqlDialogOpen(true);
+      }
     } catch (err) {
       console.error('Publish failed:', err.message);
-      setSnackbarMessage(`Failed to publish tags: ${err.message}`);
-      setSnackbarOpen(true);
+      
+      // Handle timeout errors
+      if (err.name === 'TimeoutError' || err.message.includes('timeout')) {
+        setSnackbarMessage('Publishing timed out after 60 seconds. Please try again or check your Starburst connection.');
+        setSqlDialogOpen(true);
+        setBillingInfo({
+          requiresBilling: false,
+          message: '❌ Publishing timed out. This usually means the Starburst API is slow or unresponsive. Please try again.'
+        });
+      } else {
+        setSnackbarMessage(`Failed to publish tags: ${err.message}`);
+        setSnackbarOpen(true);
+      }
     } finally {
       setPublishing(false);
     }
   };
 
-  const handleRemoveTag = (columnName, tagToRemove) => {
+  const handleRemoveTag = async (columnName, tagToRemove) => {
+    try {
+      // Remove from local state first for immediate UI feedback
+      const updatedColumns = tableData.columns.map(col => 
+        col.name === columnName 
+          ? { ...col, tags: col.tags.filter(tag => tag !== tagToRemove) }
+          : col
+      );
+      setTableData({ ...tableData, columns: updatedColumns });
+      
+      // Call backend to delete the tag from the actual resource
+      if (resourceType === 'GCP') {
+        // BigQuery delete
+        const response = await fetch('http://localhost:8000/api/bigquery/delete-tags', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            projectId: gcpProject,
+            datasetId: dataset,
+            tableId: tableName,
+            columnName: columnName,
+            tagToDelete: tagToRemove
+          }),
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to delete tag from BigQuery');
+        }
+      } else if (resourceType === 'Starburst Galaxy') {
+        // Starburst delete - send correct payload format with columnTags
+        const response = await fetch('http://localhost:8000/api/starburst/delete-tags', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            catalog: gcpProject,
+            schema: dataset,
+            tableId: tableName,
+            columnTags: [{
+              columnName: columnName,
+              tags: [tagToRemove]
+            }]
+          }),
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to delete tag from Starburst Galaxy');
+        }
+      }
+      
+      setSnackbarMessage(`✅ Tag "${tagToRemove}" successfully removed from column "${columnName}"`);
+      setSnackbarOpen(true);
+    } catch (err) {
+      console.error('Delete tag failed:', err.message);
+      setSnackbarMessage(`❌ Failed to remove tag: ${err.message}`);
+      setSnackbarOpen(true);
+      
+      // Revert the local change on error by refetching
+      handleSearch();
+    }
+  };
+
+  const handleShowRecommendedTags = () => {
+    if (!tableData || !tableData.columns) {
+      setSnackbarMessage('No table data available');
+      setSnackbarOpen(true);
+      return;
+    }
+    
+    // Generate recommended security tags with sensitivity levels (1-5) for PII columns
+    const recommendations = {};
+    tableData.columns.forEach(col => {
+      if (col.piiFound) {
+        const name = col.name.toLowerCase();
+        const tags = ['PII', 'SENSITIVE', 'DATA_PRIVACY'];
+        let sensitivityLevel = 3; // Default medium sensitivity
+        
+        // Determine sensitivity level and specific tags based on PII type
+        if (name.includes('ssn') || name.includes('social') || name.includes('social_security')) {
+          sensitivityLevel = 5; // Highest sensitivity
+          tags.push('SSN', 'CRITICAL_PII', 'ENCRYPT_AT_REST', 'ENCRYPT_IN_TRANSIT');
+        } else if (name.includes('credit') || name.includes('card') || name.includes('payment')) {
+          sensitivityLevel = 5; // Highest sensitivity
+          tags.push('FINANCIAL', 'PAYMENT_INFO', 'PCI_DSS', 'ENCRYPT_AT_REST', 'ENCRYPT_IN_TRANSIT');
+        } else if (name.includes('password') || name.includes('secret') || name.includes('token')) {
+          sensitivityLevel = 5; // Highest sensitivity
+          tags.push('CREDENTIALS', 'AUTH_TOKEN', 'HASH_AT_REST', 'NEVER_LOG');
+        } else if (name.includes('bank') || name.includes('routing') || name.includes('account')) {
+          sensitivityLevel = 5; // Highest sensitivity
+          tags.push('BANKING_INFO', 'FINANCIAL', 'ENCRYPT_AT_REST');
+        } else if (name.includes('date') && (name.includes('birth') || name.includes('dob'))) {
+          sensitivityLevel = 4; // High sensitivity
+          tags.push('DATE_OF_BIRTH', 'PERSONAL_INFO', 'ENCRYPT_AT_REST');
+        } else if (name.includes('address') || name.includes('street') || name.includes('zipcode') || name.includes('postal')) {
+          sensitivityLevel = 4; // High sensitivity
+          tags.push('ADDRESS', 'LOCATION', 'PERSONAL_INFO', 'ENCRYPT_AT_REST');
+        } else if (name.includes('passport') || name.includes('license') || name.includes('national_id')) {
+          sensitivityLevel = 5; // Highest sensitivity
+          tags.push('GOVERNMENT_ID', 'CRITICAL_PII', 'ENCRYPT_AT_REST', 'ENCRYPT_IN_TRANSIT');
+        } else if (name.includes('email') || name.includes('e_mail')) {
+          sensitivityLevel = 3; // Medium-high sensitivity
+          tags.push('EMAIL', 'PERSONAL_INFO', 'MASK_IN_LOGS');
+        } else if (name.includes('phone') || name.includes('mobile') || name.includes('cell')) {
+          sensitivityLevel = 3; // Medium-high sensitivity
+          tags.push('PHONE', 'PERSONAL_INFO', 'MASK_IN_LOGS');
+        } else if (name.includes('name') && (name.includes('first') || name.includes('last') || name.includes('full'))) {
+          sensitivityLevel = 2; // Medium sensitivity
+          tags.push('NAME', 'PERSONAL_INFO', 'MASK_IN_LOGS');
+        } else if (name.includes('id') && (name.includes('user') || name.includes('customer') || name.includes('person'))) {
+          sensitivityLevel = 2; // Medium sensitivity
+          tags.push('IDENTIFIER', 'PERSONAL_INFO');
+        } else {
+          sensitivityLevel = 2; // Medium sensitivity for general PII
+          tags.push('GENERAL_PII');
+        }
+        
+        // Add ONE PII sensitivity level tag
+        tags.push(`PII_SENSITIVITY_LEVEL_${sensitivityLevel}`);
+        
+        recommendations[col.name] = {
+          tags: tags,
+          sensitivityLevel: sensitivityLevel
+        };
+      }
+    });
+    
+    setRecommendedTags(recommendations);
+    setRecommendedTagsDialogOpen(true);
+  };
+
+  const handleApplyRecommendedTag = (columnName, tag) => {
+    // Update the column with the tag
     const updatedColumns = tableData.columns.map(col => 
       col.name === columnName 
-        ? { ...col, tags: col.tags.filter(tag => tag !== tagToRemove) }
+        ? { ...col, tags: [...new Set([...(col.tags || []), tag])] }
         : col
     );
     setTableData({ ...tableData, columns: updatedColumns });
-    setSnackbarMessage(`Tag "${tagToRemove}" removed from column "${columnName}"`);
+    
+    // Remove the tag from recommendations
+    const updatedRecs = { ...recommendedTags };
+    if (updatedRecs[columnName] && updatedRecs[columnName].tags) {
+      const rec = updatedRecs[columnName];
+      rec.tags = rec.tags.filter(t => t !== tag);
+      if (rec.tags.length === 0) {
+        delete updatedRecs[columnName];
+      }
+    }
+    setRecommendedTags(updatedRecs);
+    
+    setSnackbarMessage(`Tag "${tag}" added to column "${columnName}"`);
     setSnackbarOpen(true);
+  };
+
+  const handleApplyAllRecommendedTags = () => {
+    // Apply all recommended tags
+    const updatedColumns = tableData.columns.map(col => {
+      const rec = recommendedTags[col.name];
+      const recommendations = rec ? rec.tags : [];
+      return {
+        ...col,
+        tags: [...new Set([...(col.tags || []), ...recommendations])]
+      };
+    });
+    
+    setTableData({ ...tableData, columns: updatedColumns });
+    setRecommendedTags({});
+    setRecommendedTagsDialogOpen(false);
+    setSnackbarMessage(`All recommended tags added to PII columns`);
+    setSnackbarOpen(true);
+  };
+
+  const handleOpenTagMenu = (event) => {
+    setTagMenuAnchor(event.currentTarget);
+  };
+
+  const handleCloseTagMenu = () => {
+    setTagMenuAnchor(null);
+  };
+
+  const handleTagMenuClick = (action) => {
+    handleCloseTagMenu();
+    if (action === 'catalog') {
+      handleAddCatalogTag();
+    } else if (action === 'schema') {
+      handleAddSchemaTag();
+    } else if (action === 'table') {
+      handleAddTableTag();
+    } else if (action === 'column') {
+      handleAddColumnTag();
+    }
+  };
+
+  const handleTogglePii = (columnName) => {
+    if (!tableData) return;
+    
+    const column = tableData.columns.find(col => col.name === columnName);
+    if (column) {
+      setSelectedColumnForPii(column);
+      setPiiDialogOpen(true);
+    }
+  };
+
+  const handleSavePiiChange = () => {
+    if (!tableData || !selectedColumnForPii) return;
+
+    const updatedColumns = tableData.columns.map(col => 
+      col.name === selectedColumnForPii.name 
+        ? { ...col, piiFound: selectedColumnForPii.piiFound, piiType: selectedColumnForPii.piiType || '' }
+        : col
+    );
+    setTableData({ ...tableData, columns: updatedColumns });
+    setSnackbarMessage(`✅ PII status updated for column "${selectedColumnForPii.name}"`);
+    setSnackbarOpen(true);
+    setPiiDialogOpen(false);
+    setSelectedColumnForPii(null);
   };
 
   const handleCloseDialogs = () => {
     setColumnTagDialogOpen(false);
     setTableTagDialogOpen(false);
+    setCatalogTagDialogOpen(false);
+    setSchemaTagDialogOpen(false);
+    setRecommendedTagsDialogOpen(false);
+    setPiiDialogOpen(false);
     setSelectedColumn(null);
     setSelectedColumnForTag('');
     setNewTag('');
+    setSelectedColumnForPii(null);
   };
 
   return (
@@ -796,15 +1140,17 @@ const MarketplacePage = () => {
           {/* Table Results */}
           {tableData && (
             <Box sx={{ mt: 4 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                  Table: {tableData.tableName}
-          </Typography>
-                <Box sx={{ display: 'flex', gap: 1 }}>
+              <Box sx={{ mb: 2 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                    Table: {tableData.tableName}
+                  </Typography>
+                  <Box sx={{ display: 'flex', gap: 1 }}>
                   <Button
                     variant="outlined"
                     startIcon={<Label />}
-                    onClick={handleAddTableTag}
+                    endIcon={<ArrowDropDown />}
+                    onClick={handleOpenTagMenu}
                     sx={{
                       color: '#1976d2',
                       borderColor: '#1976d2',
@@ -819,27 +1165,61 @@ const MarketplacePage = () => {
                       },
                     }}
                   >
-                    Add Table Tags
+                    Add Tags
                   </Button>
+                  <Menu
+                    anchorEl={tagMenuAnchor}
+                    open={Boolean(tagMenuAnchor)}
+                    onClose={handleCloseTagMenu}
+                  >
+                    {resourceType === 'Starburst Galaxy' && (
+                      [
+                        <MenuItem key="catalog" onClick={() => handleTagMenuClick('catalog')}>
+                          <ListItemIcon>
+                            <Folder fontSize="small" />
+                          </ListItemIcon>
+                          <ListItemText>Add Catalog Tags</ListItemText>
+                        </MenuItem>,
+                        <MenuItem key="schema" onClick={() => handleTagMenuClick('schema')}>
+                          <ListItemIcon>
+                            <Schema fontSize="small" />
+                          </ListItemIcon>
+                          <ListItemText>Add Schema Tags</ListItemText>
+                        </MenuItem>
+                      ]
+                    )}
+                    <MenuItem onClick={() => handleTagMenuClick('table')}>
+                      <ListItemIcon>
+                        <Label fontSize="small" />
+                      </ListItemIcon>
+                      <ListItemText>Add Table Tags</ListItemText>
+                    </MenuItem>
+                    <MenuItem onClick={() => handleTagMenuClick('column')}>
+                      <ListItemIcon>
+                        <TableChart fontSize="small" />
+                      </ListItemIcon>
+                      <ListItemText>Add Column Tags</ListItemText>
+                    </MenuItem>
+                  </Menu>
                   <Button
                     variant="outlined"
-                    startIcon={<TableChart />}
-                    onClick={handleAddColumnTag}
+                    startIcon={<Security />}
+                    onClick={handleShowRecommendedTags}
                     sx={{
-                      color: '#1976d2',
-                      borderColor: '#1976d2',
+                      color: '#d32f2f',
+                      borderColor: '#d32f2f',
                       px: 2,
                       py: 1,
                       fontSize: '0.875rem',
                       fontWeight: 500,
                       textTransform: 'none',
                       '&:hover': {
-                        backgroundColor: '#f5f5f5',
-                        borderColor: '#1976d2',
+                        backgroundColor: '#ffebee',
+                        borderColor: '#d32f2f',
                       },
                     }}
                   >
-                    Add Column Tags
+                    Recommended PII Tags
                   </Button>
                   <Button
                     variant="contained"
@@ -866,6 +1246,91 @@ const MarketplacePage = () => {
                     {publishing ? 'Publishing...' : 'Publish'}
                   </Button>
                 </Box>
+                </Box>
+                
+                {/* Table-Level Tags Display */}
+                {/* Catalog Tag Display - Only for Starburst */}
+                {resourceType === 'Starburst Galaxy' && catalogTag && (
+                  <Box sx={{ mb: 2, display: 'flex', gap: 0.5, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <Typography variant="body2" sx={{ fontWeight: 600, mr: 1 }}>
+                      Catalog Tag:
+                    </Typography>
+                    <Chip 
+                      label={catalogTag} 
+                      size="small"
+                      onDelete={() => {
+                        setCatalogTag(null);
+                        setSnackbarMessage(`Tag "${catalogTag}" removed from catalog`);
+                        setSnackbarOpen(true);
+                      }}
+                      deleteIcon={<Delete fontSize="small" />}
+                      sx={{
+                        backgroundColor: '#e8f5e9',
+                        color: '#2e7d32',
+                        border: '1px solid #81c784',
+                        fontWeight: 600
+                      }}
+                    />
+                  </Box>
+                )}
+
+                {/* Schema Tag Display - Only for Starburst */}
+                {resourceType === 'Starburst Galaxy' && schemaTag && (
+                  <Box sx={{ mb: 2, display: 'flex', gap: 0.5, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <Typography variant="body2" sx={{ fontWeight: 600, mr: 1 }}>
+                      Schema Tag:
+                    </Typography>
+                    <Chip 
+                      label={schemaTag} 
+                      size="small"
+                      onDelete={() => {
+                        setSchemaTag(null);
+                        setSnackbarMessage(`Tag "${schemaTag}" removed from schema`);
+                        setSnackbarOpen(true);
+                      }}
+                      deleteIcon={<Delete fontSize="small" />}
+                      sx={{
+                        backgroundColor: '#fff3e0',
+                        color: '#e65100',
+                        border: '1px solid #ffb74d',
+                        fontWeight: 600
+                      }}
+                    />
+                  </Box>
+                )}
+
+                {(tableData.tableTags && tableData.tableTags.length > 0) && (
+                  <Box sx={{ mb: 2, display: 'flex', gap: 0.5, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <Typography variant="body2" sx={{ fontWeight: 600, mr: 1 }}>
+                      Table Tags:
+                    </Typography>
+                    {tableData.tableTags.map((tag, idx) => (
+                      <Chip 
+                        key={idx}
+                        label={tag} 
+                        size="small"
+                        onDelete={() => {
+                          const updatedTableTags = tableData.tableTags.filter((_, i) => i !== idx);
+                          setTableData({ ...tableData, tableTags: updatedTableTags });
+                          setSnackbarMessage(`Tag "${tag}" removed from table`);
+                          setSnackbarOpen(true);
+                        }}
+                        deleteIcon={<Delete fontSize="small" />}
+                        sx={{
+                          backgroundColor: '#e3f2fd',
+                          color: '#1565c0',
+                          border: '1px solid #90caf9',
+                          fontWeight: 600,
+                          fontSize: '0.75rem',
+                          '&:hover': {
+                            backgroundColor: '#bbdefb',
+                          },
+                        }}
+                        variant="filled"
+                      />
+                    ))}
+                  </Box>
+                )}
               </Box>
               <TableContainer component={Paper} sx={{ mt: 2 }}>
             <Table>
@@ -901,12 +1366,25 @@ const MarketplacePage = () => {
                     </TableCell>
                         <TableCell>{column.description}</TableCell>
                     <TableCell>
-                          <Chip 
-                            label={column.piiFound ? 'Yes' : 'No'} 
-                            size="small" 
-                            color={column.piiFound ? 'error' : 'success'}
-                            variant="filled"
-                          />
+                          {column.piiFound ? (
+                            <Chip 
+                              label={column.piiType || 'PII'} 
+                              size="small" 
+                              color="error"
+                              variant="filled"
+                              onClick={() => handleTogglePii(column.name)}
+                              sx={{ cursor: 'pointer', '&:hover': { opacity: 0.8 } }}
+                            />
+                          ) : (
+                            <Chip 
+                              label="No" 
+                              size="small" 
+                              color="success"
+                              variant="filled"
+                              onClick={() => handleTogglePii(column.name)}
+                              sx={{ cursor: 'pointer', '&:hover': { opacity: 0.8 } }}
+                            />
+                          )}
                     </TableCell>
                     <TableCell>
                           <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -993,18 +1471,24 @@ const MarketplacePage = () => {
                     ))}
                   </Select>
                 </FormControl>
-                <TextField
-                  fullWidth
-                  label="Tag Name"
+                <Autocomplete
+                  freeSolo
+                  options={existingTags}
                   value={newTag}
-                  onChange={(e) => setNewTag(e.target.value)}
-                  placeholder="Enter tag name (e.g., PII, SENSITIVE, REQUIRED)"
-                  variant="outlined"
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      handleAddTag();
-                    }
-                  }}
+                  onInputChange={(e, newValue) => setNewTag(newValue)}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Tag Name"
+                      placeholder="Enter tag name (e.g., PII, SENSITIVE, REQUIRED)"
+                      variant="outlined"
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          handleAddTag();
+                        }
+                      }}
+                    />
+                  )}
                 />
               </Box>
             </DialogContent>
@@ -1022,24 +1506,32 @@ const MarketplacePage = () => {
 
           {/* Table Tag Dialog */}
           <Dialog open={tableTagDialogOpen} onClose={handleCloseDialogs} maxWidth="sm" fullWidth>
-            <DialogTitle>Add Tag to All Columns</DialogTitle>
+            <DialogTitle>{resourceType === 'GCP' ? 'Add Table Tag (BigQuery Label)' : 'Add Tag to All Columns'}</DialogTitle>
             <DialogContent>
               <Box sx={{ mt: 2 }}>
-                <TextField
-                  fullWidth
-                  label="Tag Name"
+                <Autocomplete
+                  freeSolo
+                  options={existingTags}
                   value={newTag}
-                  onChange={(e) => setNewTag(e.target.value)}
-                  placeholder="Enter tag name (e.g., PRODUCTION, ANALYTICS, COMPLIANCE)"
-                  variant="outlined"
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      handleAddTag();
-                    }
-                  }}
+                  onInputChange={(e, newValue) => setNewTag(newValue)}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Tag Name"
+                      placeholder="Enter tag name (e.g., PRODUCTION, ANALYTICS, COMPLIANCE)"
+                      variant="outlined"
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          handleAddTag();
+                        }
+                      }}
+                    />
+                  )}
                 />
                 <Typography variant="body2" sx={{ mt: 1, color: '#666' }}>
-                  This tag will be added to all columns in the table.
+                  {resourceType === 'GCP' 
+                    ? 'This tag will be added as a BigQuery table label and applied to the table in your project.'
+                    : 'This tag will be added to all columns in the table.'}
                 </Typography>
               </Box>
             </DialogContent>
@@ -1050,7 +1542,268 @@ const MarketplacePage = () => {
                 variant="contained"
                 disabled={!newTag.trim()}
               >
-                Add to All Columns
+                {resourceType === 'GCP' ? 'Add Table Tag' : 'Add to All Columns'}
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          {/* Catalog Tag Dialog - Only for Starburst Galaxy */}
+          {resourceType === 'Starburst Galaxy' && (
+            <Dialog open={catalogTagDialogOpen} onClose={handleCloseDialogs} maxWidth="sm" fullWidth>
+              <DialogTitle>Add Tag to Catalog</DialogTitle>
+              <DialogContent>
+                <Box sx={{ mt: 2 }}>
+                  <Autocomplete
+                    freeSolo
+                    options={existingTags}
+                    value={newTag}
+                    onInputChange={(e, newValue) => setNewTag(newValue)}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Tag Name"
+                        placeholder="Enter tag name (e.g., PRODUCTION, ANALYTICS)"
+                        variant="outlined"
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            handleAddTag();
+                          }
+                        }}
+                      />
+                    )}
+                  />
+                  <Typography variant="body2" sx={{ mt: 1, color: '#666' }}>
+                    This tag will be added to the entire catalog: {gcpProject}
+                  </Typography>
+                </Box>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={handleCloseDialogs}>Cancel</Button>
+                <Button 
+                  onClick={handleAddTag} 
+                  variant="contained"
+                  disabled={!newTag.trim()}
+                >
+                  Add to Catalog
+                </Button>
+              </DialogActions>
+            </Dialog>
+          )}
+
+          {/* Schema Tag Dialog - Only for Starburst Galaxy */}
+          {resourceType === 'Starburst Galaxy' && (
+            <Dialog open={schemaTagDialogOpen} onClose={handleCloseDialogs} maxWidth="sm" fullWidth>
+              <DialogTitle>Add Tag to Schema</DialogTitle>
+              <DialogContent>
+                <Box sx={{ mt: 2 }}>
+                  <Autocomplete
+                    freeSolo
+                    options={existingTags}
+                    value={newTag}
+                    onInputChange={(e, newValue) => setNewTag(newValue)}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Tag Name"
+                        placeholder="Enter tag name (e.g., PUBLIC, INTERNAL)"
+                        variant="outlined"
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            handleAddTag();
+                          }
+                        }}
+                      />
+                    )}
+                  />
+                  <Typography variant="body2" sx={{ mt: 1, color: '#666' }}>
+                    This tag will be added to the schema: {dataset}
+                  </Typography>
+                </Box>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={handleCloseDialogs}>Cancel</Button>
+                <Button 
+                  onClick={handleAddTag} 
+                  variant="contained"
+                  disabled={!newTag.trim()}
+                >
+                  Add to Schema
+                </Button>
+              </DialogActions>
+            </Dialog>
+          )}
+
+          {/* Recommended Tags Dialog */}
+          <Dialog open={recommendedTagsDialogOpen} onClose={handleCloseDialogs} maxWidth="md" fullWidth>
+            <DialogTitle>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Security sx={{ color: '#d32f2f', fontSize: 28 }} />
+                  <Typography variant="h6">Recommended PII Security Tags</Typography>
+                </Box>
+                <Button
+                  variant="contained"
+                  color="error"
+                  startIcon={<AutoAwesome />}
+                  onClick={handleApplyAllRecommendedTags}
+                  size="small"
+                  sx={{
+                    textTransform: 'none',
+                    px: 2,
+                  }}
+                >
+                  Apply All
+                </Button>
+              </Box>
+            </DialogTitle>
+            <DialogContent>
+              <Box sx={{ mt: 2 }}>
+                <Alert severity="warning" sx={{ mb: 2 }}>
+                  <Typography variant="body2">
+                    These security tags are recommended for columns containing Personally Identifiable Information (PII) with sensitivity levels (1-5). 
+                    Tags include classification levels and encryption requirements for proper data governance and compliance.
+                  </Typography>
+                </Alert>
+                
+                <Box sx={{ mb: 2, p: 2, backgroundColor: '#f5f5f5', borderRadius: 1 }}>
+                  <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
+                    PII Sensitivity Levels:
+                  </Typography>
+                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                    <Chip label="Level 5: Critical (SSN, Credit Cards, Passwords)" size="small" sx={{ backgroundColor: '#ffebee', color: '#c62828', fontWeight: 600 }} />
+                    <Chip label="Level 4: High (DOB, Physical Address)" size="small" sx={{ backgroundColor: '#fff3e0', color: '#e65100', fontWeight: 600 }} />
+                    <Chip label="Level 3: Medium-High (Email, Phone)" size="small" sx={{ backgroundColor: '#fff9c4', color: '#f57c00', fontWeight: 600 }} />
+                    <Chip label="Level 2: Medium (Names, User IDs)" size="small" sx={{ backgroundColor: '#e3f2fd', color: '#1565c0', fontWeight: 600 }} />
+                  </Box>
+                </Box>
+                
+                <Typography variant="body2" sx={{ mb: 2, color: '#666', fontWeight: 600 }}>
+                  Click on tags to apply them to columns. Click "Apply All" to apply all recommended tags at once.
+                </Typography>
+                
+                <Box sx={{ maxHeight: '400px', overflowY: 'auto' }}>
+                  {Object.entries(recommendedTags).map(([columnName, rec]) => {
+                    const tags = rec.tags || [];
+                    const sensitivityLevel = rec.sensitivityLevel || 0;
+                    if (tags.length > 0) {
+                      return (
+                        <Box key={columnName} sx={{ mb: 3, pb: 2, borderBottom: '1px solid #e0e0e0' }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, gap: 1 }}>
+                            <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#d32f2f' }}>
+                              🔒 PII Column: {columnName}
+                            </Typography>
+                            <Chip 
+                              label={`Level ${sensitivityLevel}`} 
+                              size="small" 
+                              sx={{ 
+                                backgroundColor: sensitivityLevel >= 5 ? '#ffebee' : 
+                                                sensitivityLevel >= 4 ? '#fff3e0' :
+                                                sensitivityLevel >= 3 ? '#fff9c4' : '#e3f2fd',
+                                color: sensitivityLevel >= 5 ? '#c62828' :
+                                       sensitivityLevel >= 4 ? '#e65100' :
+                                       sensitivityLevel >= 3 ? '#f57c00' : '#1565c0',
+                                fontWeight: 700,
+                                fontSize: '0.7rem'
+                              }}
+                            />
+                          </Box>
+                          <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                            {tags.map((tag, idx) => (
+                              <Chip
+                                key={idx}
+                                label={tag}
+                                size="small"
+                                onClick={() => handleApplyRecommendedTag(columnName, tag)}
+                                sx={{
+                                  backgroundColor: '#fff3e0',
+                                  color: '#f57c00',
+                                  border: '1px solid #ffb74d',
+                                  fontWeight: 600,
+                                  fontSize: '0.75rem',
+                                  cursor: 'pointer',
+                                  '&:hover': {
+                                    backgroundColor: '#ffe0b2',
+                                    borderColor: '#ff9800',
+                                  },
+                                }}
+                              />
+                            ))}
+                          </Box>
+                        </Box>
+                      );
+                    }
+                    return null;
+                  })}
+                  {Object.entries(recommendedTags).length === 0 && (
+                    <Typography variant="body2" sx={{ color: '#999', fontStyle: 'italic', textAlign: 'center', py: 4 }}>
+                      No PII columns detected. Recommendations are only shown for columns with potentially sensitive data.
+                    </Typography>
+                  )}
+                </Box>
+              </Box>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={handleCloseDialogs}>Close</Button>
+            </DialogActions>
+          </Dialog>
+
+          {/* PII Status Change Dialog */}
+          <Dialog open={piiDialogOpen} onClose={handleCloseDialogs} maxWidth="sm" fullWidth>
+            <DialogTitle>
+              Change PII Status for Column: {selectedColumnForPii?.name}
+            </DialogTitle>
+            <DialogContent>
+              <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <FormControl component="fieldset">
+                  <FormLabel component="legend">PII Status</FormLabel>
+                  <RadioGroup
+                    value={selectedColumnForPii?.piiFound ? 'yes' : 'no'}
+                    onChange={(e) => {
+                      const isPii = e.target.value === 'yes';
+                      setSelectedColumnForPii({
+                        ...selectedColumnForPii,
+                        piiFound: isPii,
+                        piiType: isPii ? (selectedColumnForPii?.piiType || 'PII') : ''
+                      });
+                    }}
+                  >
+                    <FormControlLabel 
+                      value="yes" 
+                      control={<Radio />} 
+                      label="Mark as PII" 
+                    />
+                    <FormControlLabel 
+                      value="no" 
+                      control={<Radio />} 
+                      label="Mark as Non-PII" 
+                    />
+                  </RadioGroup>
+                </FormControl>
+                {selectedColumnForPii?.piiFound && (
+                  <TextField
+                    fullWidth
+                    label="PII Type (e.g., Email, SSN, Phone)"
+                    placeholder="Enter PII type"
+                    value={selectedColumnForPii?.piiType || ''}
+                    onChange={(e) => {
+                      setSelectedColumnForPii({
+                        ...selectedColumnForPii,
+                        piiType: e.target.value
+                      });
+                    }}
+                    variant="outlined"
+                    helperText="Describe the type of PII this column contains"
+                  />
+                )}
+              </Box>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={handleCloseDialogs}>Cancel</Button>
+              <Button 
+                onClick={handleSavePiiChange} 
+                variant="contained"
+              >
+                Save Changes
               </Button>
             </DialogActions>
           </Dialog>
@@ -1058,7 +1811,7 @@ const MarketplacePage = () => {
           {/* Log Message Dialog */}
           <Dialog open={sqlDialogOpen} onClose={() => setSqlDialogOpen(false)} maxWidth="md" fullWidth>
             <DialogTitle>
-              BigQuery Operation Result
+              {resourceType === 'GCP' ? 'BigQuery Operation Result' : resourceType === 'Starburst Galaxy' ? 'Starburst Operation Result' : resourceType === 'Azure Purview' ? 'Azure Purview Operation Result' : 'Operation Result'}
             </DialogTitle>
             <DialogContent>
               <Box sx={{ mt: 2 }}>

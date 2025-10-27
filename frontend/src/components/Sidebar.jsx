@@ -18,6 +18,7 @@ import {
   ExpandMore,
   Search,
   Timeline,
+  Security,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -39,6 +40,7 @@ const Sidebar = ({ open, onClose }) => {
       ]
     },
     { label: 'Publish Assets to Marketplace', icon: <Publish />, path: '/marketplace' },
+    { label: 'Trino Governance Control', icon: <Security />, path: '/governance' },
   ];
 
   const handleItemClick = (path) => {

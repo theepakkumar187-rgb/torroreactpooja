@@ -9,7 +9,6 @@ import ReactFlow, {
   Panel,
   Handle,
   Position,
-  ConnectionLineType,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import {
@@ -42,6 +41,15 @@ import {
   IconButton,
   Tooltip,
   Autocomplete,
+  Tabs,
+  Tab,
+  Menu,
+  Divider,
+  List,
+  ListItem,
+  ListItemText,
+  LinearProgress,
+  Badge,
 } from '@mui/material';
 import {
   Refresh,
@@ -54,6 +62,14 @@ import {
   Close,
   AccountTree,
   FilterList,
+  TableChart,
+  Download,
+  Analytics,
+  Warning,
+  TrendingUp,
+  MoreVert,
+  CloudDownload,
+  Share,
 } from '@mui/icons-material';
 
 // Custom node component for better styling
@@ -62,55 +78,60 @@ const CustomNode = ({ data }) => {
   
   return (
     <>
-      <Handle type="target" position={Position.Left} style={{ display: 'none' }} />
-      <Handle type="source" position={Position.Right} style={{ display: 'none' }} />
+      <Handle type="target" position={Position.Left} style={{ background: '#666', width: 8, height: 8 }} />
+      <Handle type="source" position={Position.Right} style={{ background: '#666', width: 8, height: 8 }} />
       
       <Box
         sx={{
           px: 3,
           py: 2,
-          borderRadius: 2,
-          border: '2px solid',
-          borderColor: isSelected ? '#ff6b6b' : (data.type === 'View' ? '#8FA0F5' : '#4caf50'),
-          backgroundColor: isSelected ? '#ffe5e5' : (data.type === 'View' ? '#f3f5ff' : '#f1f8f4'),
+          borderRadius: 1,
+          border: '1px solid #ddd',
+          backgroundColor: isSelected ? '#f5f5f5' : '#ffffff',
           minWidth: 200,
           cursor: 'pointer',
-          transition: 'all 0.3s ease',
-          boxShadow: isSelected ? '0 0 0 3px rgba(255, 107, 107, 0.3)' : 'none',
+          transition: 'all 0.2s ease',
+          boxShadow: isSelected ? '0 0 0 2px #666' : '0 1px 3px rgba(0,0,0,0.1)',
           '&:hover': {
-            boxShadow: isSelected ? '0 0 0 3px rgba(255, 107, 107, 0.5)' : '0 4px 12px rgba(0,0,0,0.15)',
-            transform: 'translateY(-2px)',
+            boxShadow: isSelected ? '0 0 0 2px #666' : '0 2px 6px rgba(0,0,0,0.15)',
+            transform: 'translateY(-1px)',
           },
         }}
         onClick={() => data.onNodeClick && data.onNodeClick(data.id)}
       >
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-        <DataObject sx={{ fontSize: 20, color: data.type === 'View' ? '#8FA0F5' : '#4caf50' }} />
-        <Typography variant="body2" sx={{ fontWeight: 700, fontSize: 14 }}>
+        <DataObject sx={{ fontSize: 18, color: '#666' }} />
+        <Typography variant="body2" sx={{ fontWeight: 600, fontSize: 14, color: '#333' }}>
           {data.name}
         </Typography>
       </Box>
+      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}>
       <Chip 
-        label={data.type} 
+          label={data.type || 'Unknown'} 
         size="small" 
+          variant="outlined"
         sx={{ 
-          height: 20, 
+            height: 24, 
           fontSize: 11,
-          backgroundColor: data.type === 'View' ? '#8FA0F5' : '#4caf50',
-          color: 'white',
-          fontWeight: 600,
-        }} 
-      />
-      <Box sx={{ mt: 1 }}>
+            borderColor: '#ccc',
+            color: '#666',
+            fontWeight: 500,
+            minWidth: '50px'
+          }} 
+        />
         <Chip 
-          label={data.source_system} 
+          label={data.source_system || data.connector_id || 'Unknown'} 
           size="small" 
           variant="outlined"
           sx={{ 
-            height: 20, 
+            height: 24, 
             fontSize: 10,
-            borderColor: data.source_system === 'BigQuery' ? '#4285f4' : '#ff6f00',
-            color: data.source_system === 'BigQuery' ? '#4285f4' : '#ff6f00',
+            borderColor: '#999',
+            color: '#555',
+            fontWeight: 500,
+            minWidth: '60px',
+            backgroundColor: '#f5f5f5',
+            border: '1px solid #ddd'
           }} 
         />
       </Box>
@@ -123,13 +144,38 @@ const nodeTypes = {
   custom: CustomNode,
 };
 
+// PII Detection Function
+const detectPII = (columnName, description) => {
+  const piiPatterns = [
+    // Email patterns
+    /email/i, /e-mail/i, /mail/i,
+    // Phone patterns
+    /phone/i, /mobile/i, /cell/i, /telephone/i,
+    // Name patterns
+    /firstname/i, /lastname/i, /fullname/i, /name/i,
+    // Address patterns
+    /address/i, /street/i, /city/i, /zip/i, /postal/i,
+    // ID patterns
+    /ssn/i, /social/i, /passport/i, /license/i, /id/i,
+    // Financial patterns
+    /credit/i, /card/i, /account/i, /bank/i,
+    // Personal patterns
+    /birth/i, /age/i, /gender/i, /race/i, /ethnicity/i,
+    // Location patterns
+    /location/i, /gps/i, /coordinate/i, /lat/i, /lng/i,
+    // Other sensitive patterns
+    /password/i, /secret/i, /private/i, /confidential/i
+  ];
+  
+  const combinedText = `${columnName} ${description || ''}`.toLowerCase();
+  return piiPatterns.some(pattern => pattern.test(combinedText));
+};
+
 const DataLineagePage = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedNode, setSelectedNode] = useState(null);
-  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [assets, setAssets] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
@@ -139,6 +185,11 @@ const DataLineagePage = () => {
   const [edgeDetailsOpen, setEdgeDetailsOpen] = useState(false);
   const [selectedAssetForLineage, setSelectedAssetForLineage] = useState(null);
   const [fullLineageData, setFullLineageData] = useState({ nodes: [], edges: [] });
+  const [showAssetDetails, setShowAssetDetails] = useState(false);
+  const [selectedAssetDetails, setSelectedAssetDetails] = useState(null);
+  const [activeDetailTab, setActiveDetailTab] = useState('basic');
+  const [selectedNode, setSelectedNode] = useState(null);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
 
   // Fetch lineage data
   const fetchLineage = async () => {
@@ -163,6 +214,14 @@ const DataLineagePage = () => {
         return;
       }
 
+      // If no data, clear everything
+      if (!data.nodes || data.nodes.length === 0) {
+        setFullLineageData({ nodes: [], edges: [], rawData: { nodes: [], edges: [] } });
+        setNodes([]);
+        setEdges([]);
+        return;
+      }
+
       // Store full data but don't render anything by default
       // User must select an asset to see lineage
       setFullLineageData({ nodes: [], edges: [], rawData: data });
@@ -171,8 +230,8 @@ const DataLineagePage = () => {
       
       // For autocomplete dropdown, we need nodes but not displayed
       const layoutedNodes = layoutNodes(data.nodes, data.edges);
-      const flowNodes = layoutedNodes.map((node) => ({
-        id: node.id, // Use original ID directly
+      const flowNodes = layoutedNodes.map((node, index) => ({
+        id: node.id,
         type: 'custom',
         position: node.position,
         sourcePosition: 'right',
@@ -195,51 +254,46 @@ const DataLineagePage = () => {
           ? `${columnCount} columns` 
           : edge.relationship || 'feeds into';
         
-        // Use original IDs directly
-        const sourceExists = flowNodes.find(n => n.id === edge.source);
-        const targetExists = flowNodes.find(n => n.id === edge.target);
-        
-        if (!sourceExists || !targetExists) {
-          console.warn(`Edge ${index} skipped: source or target node not found`, { 
-            source: edge.source, 
-            target: edge.target,
-            availableNodeIds: flowNodes.map(n => n.id)
-          });
-          return null;
-        }
-        
         return {
           id: `edge-${index}`,
           source: edge.source,
           target: edge.target,
           type: 'smoothstep',
           animated: columnCount > 0,
-          strokeDasharray: columnCount > 0 ? '0' : '5,5',
           markerEnd: {
             type: MarkerType.ArrowClosed,
-            width: 20,
-            height: 20,
-            color: '#1976d2',
+            width: 12,
+            height: 12,
+            color: columnCount > 0 ? '#1976d2' : '#64b5f6',
           },
           style: {
-            strokeWidth: 8,
-            stroke: '#1976d2',
-            strokeOpacity: 1,
+            strokeWidth: columnCount > 0 ? 1.5 : 1,
+            stroke: columnCount > 0 ? '#1976d2' : '#64b5f6',
+            strokeDasharray: columnCount > 0 ? '0' : '5,5',
+            opacity: 0.8,
           },
           label: label,
           labelStyle: { 
             fill: '#ffffff', 
-            fontWeight: 700, 
-            fontSize: 12 
+            fontWeight: 600, 
+            fontSize: 11,
+            textShadow: '0 1px 2px rgba(0,0,0,0.3)'
           },
-          labelBgStyle: { fill: '#1976d2', fillOpacity: 0.9 },
+          labelBgStyle: { 
+            fill: columnCount > 0 ? '#1976d2' : '#64b5f6', 
+            fillOpacity: 0.9,
+            padding: '4px 8px',
+            borderRadius: '12px',
+            stroke: '#ffffff',
+            strokeWidth: 1
+          },
           data: {
             column_lineage: edge.column_lineage || [],
             relationship: edge.relationship,
             onEdgeClick: handleEdgeClick,
           },
         };
-      }).filter(edge => edge !== null); // Filter out null edges
+      });
 
       // Store for dropdown and future use, but don't display by default
       setFullLineageData({ nodes: flowNodes, edges: flowEdges, rawData: data });
@@ -255,11 +309,13 @@ const DataLineagePage = () => {
   // Fetch assets for details
   const fetchAssets = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/assets');
+      const response = await fetch('http://localhost:8000/api/assets?page=0&size=100');
       const data = await response.json();
-      setAssets(data);
+      // API returns { assets: [...], pagination: {...} }
+      setAssets(Array.isArray(data.assets) ? data.assets : []);
     } catch (error) {
       console.error('Error fetching assets:', error);
+      setAssets([]);
     }
   };
 
@@ -353,11 +409,12 @@ const DataLineagePage = () => {
     return layoutedNodes;
   };
 
-  // Handle node click
+  // Handle node click for popup dialog
   const handleNodeClick = async (nodeId) => {
     try {
       // Find asset in local assets array
       const asset = assets.find(a => a.id === nodeId);
+      
       if (!asset) {
         // Fetch from API if not in local array
         const response = await fetch(`http://localhost:8000/api/assets/${encodeURIComponent(nodeId)}`);
@@ -385,10 +442,42 @@ const DataLineagePage = () => {
     }
   };
 
+  // Handle dialog close
   const handleCloseDialog = () => {
     setDetailsDialogOpen(false);
     setSelectedNode(null);
   };
+
+  // Handle asset selection for details panel
+  const handleAssetDetailsSelection = async (assetId) => {
+    if (!assetId) {
+      setShowAssetDetails(false);
+      setSelectedAssetDetails(null);
+      return;
+    }
+
+    try {
+      // Find asset in full lineage data
+      const asset = fullLineageData.rawData?.nodes?.find(n => n.id === assetId);
+      if (asset) {
+        setSelectedAssetDetails(asset);
+        setShowAssetDetails(true);
+      } else {
+        // Try to fetch from API
+        const response = await fetch(`http://localhost:8000/api/assets/${encodeURIComponent(assetId)}`);
+        if (response.ok) {
+          const data = await response.json();
+          setSelectedAssetDetails(data);
+          setShowAssetDetails(true);
+        } else {
+          console.error('Asset not found:', assetId);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching asset details:', error);
+    }
+  };
+
 
   const handleEdgeClick = (edgeData) => {
     setSelectedEdge(edgeData);
@@ -451,12 +540,10 @@ const DataLineagePage = () => {
 
     // Re-layout the filtered graph
     const layoutedNodes = layoutNodes(filteredNodes, filteredEdges);
-    
     const flowNodes = layoutedNodes.map((node) => {
       const originalNode = filteredNodes.find(n => n.id === node.id);
-      
       return {
-        id: node.id, // Use original ID directly - no index suffix
+        id: node.id,
         type: 'custom',
         position: node.position,
         sourcePosition: 'right',
@@ -482,48 +569,40 @@ const DataLineagePage = () => {
         ? `${columnCount} columns` 
         : edge.relationship || 'feeds into';
       
-      // Use original IDs directly - no mapping needed
-      const sourceExists = flowNodes.find(n => n.id === edge.source);
-      const targetExists = flowNodes.find(n => n.id === edge.target);
-      
-      if (!sourceExists || !targetExists) {
-        console.warn(`Edge ${index} skipped: source or target node not found`, { 
-          source: edge.source, 
-          target: edge.target,
-          availableNodeIds: flowNodes.map(n => n.id)
-        });
-        return null;
-      }
-      
       return {
-        id: `edge-${index}`,
+        id: `${edge.source}->${edge.target}`,
         source: edge.source,
         target: edge.target,
         sourceHandle: null,
         targetHandle: null,
         type: 'smoothstep',
         animated: columnCount > 0,
-        strokeDasharray: columnCount > 0 ? '0' : '5,5',
         markerEnd: {
           type: MarkerType.ArrowClosed,
-          color: '#1976d2',
+          width: 12,
+          height: 12,
+          color: columnCount > 0 ? '#1976d2' : '#64b5f6',
         },
         style: {
-          strokeWidth: 8,
-          stroke: '#1976d2',
-          strokeOpacity: 1,
+          strokeWidth: columnCount > 0 ? 1.5 : 1,
+          stroke: columnCount > 0 ? '#1976d2' : '#64b5f6',
+          strokeDasharray: columnCount > 0 ? '0' : '5,5',
+          opacity: 0.8,
         },
         label: label,
         labelStyle: { 
-          fill: '#fff', 
-          fontWeight: 700, 
-          fontSize: 10 
+          fill: '#ffffff', 
+          fontWeight: 600, 
+          fontSize: 11,
+          textShadow: '0 1px 2px rgba(0,0,0,0.3)'
         },
         labelBgStyle: { 
-          fill: '#1976d2', 
+          fill: columnCount > 0 ? '#1976d2' : '#64b5f6', 
           fillOpacity: 0.9,
-          padding: '2px 6px',
-          borderRadius: '4px' 
+          padding: '4px 8px',
+          borderRadius: '12px',
+          stroke: '#ffffff',
+          strokeWidth: 1
         },
         data: {
           column_lineage: edge.column_lineage || [],
@@ -531,31 +610,13 @@ const DataLineagePage = () => {
           onEdgeClick: handleEdgeClick,
         },
       };
-    }).filter(edge => edge !== null); // Filter out null edges
-
-      console.log(`✅ Created ${flowEdges.length} edges for ${flowNodes.length} nodes`);
-      console.log('Sample edge:', flowEdges[0]);
-      console.log('All edges:', flowEdges);
-      console.log('Setting nodes:', flowNodes.length);
-      console.log('Setting edges:', flowEdges.length);
-
-    console.log('⚡ About to set nodes and edges:', {
-      nodesCount: flowNodes.length,
-      edgesCount: flowEdges.length,
-      nodeIds: flowNodes.map(n => n.id),
-      edges: flowEdges.map(e => ({ id: e.id, source: e.source, target: e.target }))
     });
-    
+
+    console.log(`✅ Created ${flowEdges.length} edges for ${flowNodes.length} nodes`);
+    console.log('Sample edge:', flowEdges[0]);
+
     setNodes(flowNodes);
     setEdges(flowEdges);
-    
-    // Force a re-render after a short delay
-    setTimeout(() => {
-      console.log('🔄 Force re-render edges');
-      setEdges([...flowEdges]);
-    }, 100);
-    
-    console.log('✅ Nodes and edges set successfully');
   };
 
   // Apply filters
@@ -573,25 +634,13 @@ const DataLineagePage = () => {
     const targetExists = filteredNodes.find(n => n.id === edge.target);
     return sourceExists && targetExists;
   });
-  
-  console.log('🔍 Rendering:', { 
-    totalNodes: nodes.length, 
-    filteredNodes: filteredNodes.length, 
-    totalEdges: edges.length, 
-    filteredEdges: filteredEdges.length,
-    sampleEdge: filteredEdges[0]
-  });
-  
-  if (filteredEdges.length > 0) {
-    console.log('🔵 EDGE DETAILS:', JSON.stringify(filteredEdges[0], null, 2));
-  }
 
   // Get unique types and sources for filters
   const uniqueTypes = [...new Set(nodes.map(n => n.data.type))];
   const uniqueSources = [...new Set(nodes.map(n => n.data.source_system))];
 
   return (
-    <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column', p: 3 }}>
+    <Box sx={{ minHeight: '120vh', p: 4, pb: 8 }}>
       {/* Header */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Box>
@@ -621,22 +670,20 @@ const DataLineagePage = () => {
           <Grid container spacing={2} alignItems="center">
             <Grid item xs={12} md={5}>
               <Autocomplete
-                options={fullLineageData.rawData?.nodes ? fullLineageData.rawData.nodes.map((n, idx) => ({
+                options={fullLineageData.rawData?.nodes ? fullLineageData.rawData.nodes.map(n => ({
                   id: n.id,
-                  uniqueKey: `${n.id}-${idx}`,
                   label: `${n.name} (${n.type})`,
                   name: n.name,
                   type: n.type,
                   source: n.source_system,
                 })) : []}
-                getOptionLabel={(option) => option.label || ''}
-                isOptionEqualToValue={(option, value) => option.id === value.id}
                 value={fullLineageData.rawData?.nodes?.find(n => n.id === selectedAssetForLineage) ? {
                   id: selectedAssetForLineage,
                   label: fullLineageData.rawData.nodes.find(n => n.id === selectedAssetForLineage)?.name,
                 } : null}
                 onChange={(event, newValue) => {
                   handleAssetSelection(newValue ? newValue.id : null);
+                  handleAssetDetailsSelection(newValue ? newValue.id : null);
                 }}
                 disabled={!fullLineageData.rawData?.nodes || fullLineageData.rawData.nodes.length === 0}
                 renderInput={(params) => (
@@ -644,7 +691,7 @@ const DataLineagePage = () => {
                     {...params}
                     size="small"
                     label="Focus on Asset"
-                    placeholder="Select asset to view its lineage..."
+                    placeholder="Select asset to view its lineage and details..."
                     InputProps={{
                       ...params.InputProps,
                       startAdornment: (
@@ -659,9 +706,9 @@ const DataLineagePage = () => {
                   />
                 )}
                 renderOption={(props, option) => (
-                  <li {...props} key={option.uniqueKey}>
+                  <li {...props}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
-                      <DataObject sx={{ fontSize: 18, color: option.type === 'View' ? '#8FA0F5' : '#4caf50' }} />
+                      <DataObject sx={{ fontSize: 18, color: '#666' }} />
                       <Box sx={{ flex: 1 }}>
                         <Typography variant="body2" sx={{ fontWeight: 600 }}>
                           {option.name}
@@ -741,7 +788,7 @@ const DataLineagePage = () => {
       </Card>
 
       {/* Lineage Graph */}
-      <Card sx={{ flexGrow: 1, position: 'relative', minHeight: 500 }}>
+      <Card sx={{ position: 'relative', height: '700px', mb: 4 }}>
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
             <CircularProgress />
@@ -807,20 +854,6 @@ const DataLineagePage = () => {
             onEdgeClick={onEdgeClick}
             nodeTypes={nodeTypes}
             fitView
-            fitViewOptions={{ padding: 0.2 }}
-            minZoom={0.1}
-            maxZoom={4}
-            defaultEdgeOptions={{
-              type: 'smoothstep',
-              animated: true,
-              style: { strokeWidth: 8, stroke: '#1976d2', strokeOpacity: 1 },
-              markerEnd: { type: MarkerType.ArrowClosed, color: '#1976d2', width: 20, height: 20 },
-            }}
-            connectionLineType={ConnectionLineType.SmoothStep}
-            proOptions={{ hideAttribution: true }}
-            elementsSelectable={true}
-            nodesConnectable={false}
-            nodesDraggable={true}
             attributionPosition="bottom-left"
           >
             <Background color="#aaa" gap={16} />
@@ -836,19 +869,23 @@ const DataLineagePage = () => {
                 </Typography>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Box sx={{ width: 16, height: 16, backgroundColor: '#f1f8f4', border: '2px solid #4caf50', borderRadius: 1 }} />
+                    <Box sx={{ width: 16, height: 16, backgroundColor: '#ffffff', border: '1px solid #ddd', borderRadius: 0.5 }} />
                     <Typography variant="caption">Table</Typography>
                   </Box>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Box sx={{ width: 16, height: 16, backgroundColor: '#f3f5ff', border: '2px solid #8FA0F5', borderRadius: 1 }} />
+                    <Box sx={{ width: 16, height: 16, backgroundColor: '#ffffff', border: '1px solid #ddd', borderRadius: 0.5 }} />
                     <Typography variant="caption">View</Typography>
                   </Box>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Box sx={{ width: 16, height: 16, backgroundColor: '#ffe5e5', border: '2px solid #ff6b6b', borderRadius: 1 }} />
+                    <Box sx={{ width: 16, height: 16, backgroundColor: '#f5f5f5', border: '1px solid #666', borderRadius: 0.5 }} />
                     <Typography variant="caption">Selected</Typography>
                   </Box>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Box sx={{ width: 16, height: 2, backgroundColor: '#1976d2' }} />
+                    <Typography variant="caption">Column Flow</Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Box sx={{ width: 16, height: 2, backgroundColor: '#64b5f6', backgroundImage: 'repeating-linear-gradient(90deg, #64b5f6 0px, #64b5f6 5px, transparent 5px, transparent 10px)' }} />
                     <Typography variant="caption">Data Flow</Typography>
                   </Box>
                 </Box>
@@ -858,7 +895,599 @@ const DataLineagePage = () => {
         )}
       </Card>
 
-      {/* Asset Details Dialog */}
+      {/* Asset Details Header */}
+      {selectedAssetDetails && (
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, mt: 4 }}>
+          <Typography variant="h5" sx={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}>
+            <DataObject sx={{ fontSize: 28, color: '#666' }} />
+            Asset Details
+          </Typography>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={() => {
+              setSelectedAssetDetails(null);
+              setSelectedAssetForLineage(null);
+              setNodes([]);
+              setEdges([]);
+              setActiveDetailTab('basic');
+            }}
+            startIcon={<Close />}
+          >
+            Clear Selection
+          </Button>
+        </Box>
+      )}
+
+      {/* No Asset Selected State */}
+      {!selectedAssetDetails && (
+        <Box sx={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          py: 8,
+          textAlign: 'center',
+          mt: 4
+        }}>
+          <DataObject sx={{ fontSize: 64, color: '#ddd', mb: 2 }} />
+          <Typography variant="h5" color="text.secondary" sx={{ mb: 1 }}>
+            No Asset Selected
+                  </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Select an asset from the dropdown above to view its details and lineage
+          </Typography>
+                  </Box>
+      )}
+
+      {/* Asset Details Tabs */}
+      {selectedAssetDetails && (
+        <Card sx={{ mb: 4, minHeight: '400px' }}>
+          <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+            <Tabs 
+              value={activeDetailTab} 
+              onChange={(e, newValue) => setActiveDetailTab(newValue)}
+              variant="scrollable"
+              scrollButtons="auto"
+            >
+              <Tab 
+                label="Basic Information" 
+                value="basic" 
+                icon={<DataObject />}
+                iconPosition="start"
+                sx={{ textTransform: 'none', fontWeight: 500 }}
+              />
+              <Tab 
+                label="Column Information" 
+                value="columns" 
+                icon={<TableChart />}
+                iconPosition="start"
+                sx={{ textTransform: 'none', fontWeight: 500 }}
+              />
+              <Tab 
+                label="Lineage Information" 
+                value="lineage" 
+                icon={<AccountTree />}
+                iconPosition="start"
+                sx={{ textTransform: 'none', fontWeight: 500 }}
+              />
+              <Tab 
+                label="Metadata" 
+                value="metadata" 
+                icon={<Info />}
+                iconPosition="start"
+                sx={{ textTransform: 'none', fontWeight: 500 }}
+              />
+              <Tab 
+                label="Data Quality" 
+                value="quality" 
+                icon={<FilterList />}
+                iconPosition="start"
+                sx={{ textTransform: 'none', fontWeight: 500 }}
+              />
+            </Tabs>
+                </Box>
+          
+          <CardContent sx={{ p: 4, minHeight: '350px', overflow: 'auto' }}>
+            {/* Basic Information Tab */}
+            {activeDetailTab === 'basic' && (
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                <Box>
+                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: 12, fontWeight: 500, mb: 0.5 }}>
+                    Asset Name
+                    </Typography>
+                  <Typography variant="h5" sx={{ fontWeight: 600, color: '#333' }}>
+                    {selectedAssetDetails.name}
+                    </Typography>
+                </Box>
+                <Box>
+                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: 12, fontWeight: 500, mb: 0.5 }}>
+                      Asset ID
+                    </Typography>
+                  <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: 12, wordBreak: 'break-all', color: '#666' }}>
+                    {selectedAssetDetails.id}
+                    </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                  <Chip 
+                    label={selectedAssetDetails.type} 
+                    size="medium" 
+                    variant="outlined"
+                    sx={{ height: 32, fontSize: 13, borderColor: '#ccc', color: '#666', fontWeight: 500 }}
+                  />
+                  <Chip 
+                    label={selectedAssetDetails.source_system} 
+                    size="medium" 
+                    variant="outlined"
+                    sx={{ height: 32, fontSize: 13, borderColor: '#ccc', color: '#666', fontWeight: 500 }}
+                  />
+                </Box>
+                <Box>
+                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: 12, fontWeight: 500, mb: 0.5 }}>
+                    Catalog
+                    </Typography>
+                  <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: 12, color: '#666' }}>
+                    {selectedAssetDetails.catalog || 'N/A'}
+                      </Typography>
+                </Box>
+              </Box>
+            )}
+
+            {/* Column Information Tab */}
+            {activeDetailTab === 'columns' && (
+              <Box>
+                <Typography variant="h6" sx={{ fontWeight: 600, mb: 3, color: '#333' }}>
+                  Column Information ({selectedAssetDetails.columns?.length || 0} columns)
+                </Typography>
+                {selectedAssetDetails.columns && selectedAssetDetails.columns.length > 0 ? (
+                      <TableContainer component={Paper} variant="outlined">
+                    <Table>
+                          <TableHead>
+                            <TableRow>
+                          <TableCell sx={{ fontWeight: 600, backgroundColor: '#f5f5f5' }}>Name</TableCell>
+                          <TableCell sx={{ fontWeight: 600, backgroundColor: '#f5f5f5' }}>Type</TableCell>
+                          <TableCell sx={{ fontWeight: 600, backgroundColor: '#f5f5f5' }}>PII Status</TableCell>
+                          <TableCell sx={{ fontWeight: 600, backgroundColor: '#f5f5f5' }}>Description</TableCell>
+                          <TableCell sx={{ fontWeight: 600, backgroundColor: '#f5f5f5' }}>Constraints</TableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                        {selectedAssetDetails.columns.map((col, index) => {
+                          // PII detection logic
+                          const isPII = detectPII(col.name, col.description);
+                          return (
+                              <TableRow key={index}>
+                              <TableCell sx={{ fontFamily: 'monospace', fontWeight: 500 }}>
+                                {col.name}
+                              </TableCell>
+                                <TableCell>
+                                <Chip 
+                                  label={col.type} 
+                                  size="small" 
+                                  variant="outlined"
+                                  sx={{ borderColor: '#ddd', color: '#666' }}
+                                />
+                                </TableCell>
+                              <TableCell>
+                                {isPII ? (
+                                  <Chip 
+                                    label="PII" 
+                                    size="small" 
+                                    color="error"
+                                    sx={{ fontWeight: 600 }}
+                                  />
+                                ) : (
+                                  <Chip 
+                                    label="Safe" 
+                                    size="small" 
+                                    color="success"
+                                    variant="outlined"
+                                    sx={{ fontWeight: 500 }}
+                                  />
+                                )}
+                              </TableCell>
+                              <TableCell sx={{ color: '#666' }}>
+                                {col.description || '-'}
+                              </TableCell>
+                              <TableCell>
+                                <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                                  {col.nullable === false && (
+                                    <Chip 
+                                      label="NOT NULL" 
+                                      size="small" 
+                                      variant="outlined"
+                                      sx={{ fontSize: 9, height: 20, borderColor: '#ff9800', color: '#ff9800' }}
+                                    />
+                                  )}
+                                  {col.unique && (
+                                    <Chip 
+                                      label="UNIQUE" 
+                                      size="small" 
+                                      variant="outlined"
+                                      sx={{ fontSize: 9, height: 20, borderColor: '#2196f3', color: '#2196f3' }}
+                                    />
+                                  )}
+                                  {col.primary_key && (
+                                    <Chip 
+                                      label="PK" 
+                                      size="small" 
+                                      color="primary"
+                                      sx={{ fontSize: 9, height: 20 }}
+                                    />
+                                  )}
+                                </Box>
+                              </TableCell>
+                              </TableRow>
+                          );
+                        })}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    No column information available
+                  </Typography>
+                )}
+              </Box>
+            )}
+
+            {/* Lineage Information Tab */}
+            {activeDetailTab === 'lineage' && (
+              <Box>
+                <Typography variant="h6" sx={{ fontWeight: 600, mb: 3, color: '#333' }}>
+                  Lineage Information
+                </Typography>
+                <Grid container spacing={3}>
+                  <Grid item xs={12} md={6}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2, color: '#333' }}>
+                      Upstream Dependencies
+                    </Typography>
+                    {fullLineageData.rawData?.edges?.filter(e => e.target === selectedAssetDetails.id).length > 0 ? (
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                        {fullLineageData.rawData.edges
+                          .filter(e => e.target === selectedAssetDetails.id)
+                          .map((edge, index) => {
+                            const sourceNode = fullLineageData.rawData.nodes.find(n => n.id === edge.source);
+                            return (
+                              <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 2, backgroundColor: '#f9f9f9', borderRadius: 1 }}>
+                                <Typography variant="body2" sx={{ fontFamily: 'monospace', fontWeight: 500, flex: 1 }}>
+                                  {sourceNode?.name || edge.source}
+                                </Typography>
+                                <Chip 
+                                  label={`${edge.column_lineage?.length || 0} cols`}
+                                  size="small"
+                                  variant="outlined"
+                                  sx={{ borderColor: '#ddd', color: '#666' }}
+                                />
+                              </Box>
+                            );
+                          })}
+                      </Box>
+                    ) : (
+                      <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                        No upstream dependencies
+                        </Typography>
+                      )}
+                    </Grid>
+                  <Grid item xs={12} md={6}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2, color: '#333' }}>
+                      Downstream Dependencies
+                    </Typography>
+                    {fullLineageData.rawData?.edges?.filter(e => e.source === selectedAssetDetails.id).length > 0 ? (
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                        {fullLineageData.rawData.edges
+                          .filter(e => e.source === selectedAssetDetails.id)
+                          .map((edge, index) => {
+                            const targetNode = fullLineageData.rawData.nodes.find(n => n.id === edge.target);
+                            return (
+                              <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 2, backgroundColor: '#f9f9f9', borderRadius: 1 }}>
+                                <Typography variant="body2" sx={{ fontFamily: 'monospace', fontWeight: 500, flex: 1 }}>
+                                  {targetNode?.name || edge.target}
+                                </Typography>
+                                <Chip 
+                                  label={`${edge.column_lineage?.length || 0} cols`}
+                                  size="small"
+                                  variant="outlined"
+                                  sx={{ borderColor: '#ddd', color: '#666' }}
+                                />
+                              </Box>
+                            );
+                          })}
+                      </Box>
+                    ) : (
+                      <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                        No downstream dependencies
+                      </Typography>
+                  )}
+                </Grid>
+                </Grid>
+              </Box>
+            )}
+
+            {/* Metadata Tab */}
+            {activeDetailTab === 'metadata' && (
+              <Box>
+                <Typography variant="h6" sx={{ fontWeight: 600, mb: 4, color: '#333' }}>
+                  Metadata Information
+                </Typography>
+                
+                {/* Basic Information Cards */}
+                <Grid container spacing={3} sx={{ mb: 4 }}>
+                  <Grid item xs={12} md={6}>
+                    <Box sx={{ p: 3, border: '1px solid #e0e0e0', borderRadius: 2, backgroundColor: '#fafafa' }}>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2, color: '#333' }}>
+                        Connection Details
+                      </Typography>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <Box>
+                          <Typography variant="body2" color="text.secondary" sx={{ fontSize: 12, fontWeight: 500, mb: 0.5 }}>
+                            Connector ID
+                          </Typography>
+                          <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: 12, color: '#333', wordBreak: 'break-all' }}>
+                            {selectedAssetDetails.connector_id || 'N/A'}
+                          </Typography>
+                        </Box>
+                        <Box>
+                          <Typography variant="body2" color="text.secondary" sx={{ fontSize: 12, fontWeight: 500, mb: 0.5 }}>
+                            Source System
+                          </Typography>
+                          <Typography variant="body2" sx={{ fontSize: 12, color: '#333' }}>
+                            {selectedAssetDetails.source_system || selectedAssetDetails.connector_id || 'Unknown'}
+                          </Typography>
+                        </Box>
+                        <Box>
+                          <Typography variant="body2" color="text.secondary" sx={{ fontSize: 12, fontWeight: 500, mb: 0.5 }}>
+                            Status
+                          </Typography>
+                          <Chip 
+                            label="Active" 
+                            size="small" 
+                            variant="outlined"
+                            sx={{ height: 24, fontSize: 11, borderColor: '#4caf50', color: '#4caf50' }}
+                          />
+                        </Box>
+                      </Box>
+                    </Box>
+                  </Grid>
+                  
+                  <Grid item xs={12} md={6}>
+                    <Box sx={{ p: 3, border: '1px solid #e0e0e0', borderRadius: 2, backgroundColor: '#fafafa' }}>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2, color: '#333' }}>
+                        Discovery Information
+                      </Typography>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <Box>
+                          <Typography variant="body2" color="text.secondary" sx={{ fontSize: 12, fontWeight: 500, mb: 0.5 }}>
+                            Last Discovered
+                          </Typography>
+                          <Typography variant="body2" sx={{ fontSize: 12, color: '#333' }}>
+                            {new Date().toLocaleString()}
+                          </Typography>
+                        </Box>
+                        <Box>
+                          <Typography variant="body2" color="text.secondary" sx={{ fontSize: 12, fontWeight: 500, mb: 0.5 }}>
+                            Last Modified
+                          </Typography>
+                          <Typography variant="body2" sx={{ fontSize: 12, color: '#333' }}>
+                            {selectedAssetDetails.last_modified ? new Date(selectedAssetDetails.last_modified).toLocaleString() : 'Unknown'}
+                          </Typography>
+                        </Box>
+                        <Box>
+                          <Typography variant="body2" color="text.secondary" sx={{ fontSize: 12, fontWeight: 500, mb: 0.5 }}>
+                            Owner
+                          </Typography>
+                          <Typography variant="body2" sx={{ fontSize: 12, color: '#333' }}>
+                            {selectedAssetDetails.owner || 'Unassigned'}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Box>
+                  </Grid>
+                </Grid>
+
+                {/* Technical Details */}
+                <Box sx={{ mb: 4 }}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 3, color: '#333' }}>
+                    Technical Details
+                  </Typography>
+                  <Grid container spacing={3}>
+                    <Grid item xs={12} md={6}>
+                      <Box sx={{ p: 2, border: '1px solid #e0e0e0', borderRadius: 1, textAlign: 'center' }}>
+                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: 11, fontWeight: 500, mb: 1 }}>
+                          Schema
+                        </Typography>
+                        <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: 12, color: '#333' }}>
+                          {selectedAssetDetails.schema || selectedAssetDetails.catalog || 'N/A'}
+                        </Typography>
+                      </Box>
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <Box sx={{ p: 2, border: '1px solid #e0e0e0', borderRadius: 1, textAlign: 'center' }}>
+                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: 11, fontWeight: 500, mb: 1 }}>
+                          Database
+                        </Typography>
+                        <Typography variant="body2" sx={{ fontSize: 12, color: '#333' }}>
+                          {selectedAssetDetails.database || selectedAssetDetails.source_system || 'N/A'}
+                        </Typography>
+                      </Box>
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <Box sx={{ p: 2, border: '1px solid #e0e0e0', borderRadius: 1, textAlign: 'center' }}>
+                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: 11, fontWeight: 500, mb: 1 }}>
+                          Row Count
+                        </Typography>
+                        <Typography variant="body2" sx={{ fontSize: 12, color: '#333' }}>
+                          {selectedAssetDetails.row_count ? selectedAssetDetails.row_count.toLocaleString() : 'Unknown'}
+                        </Typography>
+                      </Box>
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <Box sx={{ p: 2, border: '1px solid #e0e0e0', borderRadius: 1, textAlign: 'center' }}>
+                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: 11, fontWeight: 500, mb: 1 }}>
+                          Size
+                        </Typography>
+                        <Typography variant="body2" sx={{ fontSize: 12, color: '#333' }}>
+                          {selectedAssetDetails.size ? `${(selectedAssetDetails.size / 1024 / 1024).toFixed(2)} MB` : 'Unknown'}
+                        </Typography>
+                      </Box>
+                    </Grid>
+                  </Grid>
+                </Box>
+
+                {/* Data Governance */}
+                <Box sx={{ mb: 4 }}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 3, color: '#333' }}>
+                    Data Governance
+                  </Typography>
+                  <Grid container spacing={3}>
+                    <Grid item xs={12} md={4}>
+                      <Box sx={{ p: 2, border: '1px solid #e0e0e0', borderRadius: 1, textAlign: 'center' }}>
+                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: 11, fontWeight: 500, mb: 1 }}>
+                          Classification
+                        </Typography>
+                        <Chip 
+                          label={selectedAssetDetails.classification || 'Unclassified'} 
+                          size="small" 
+                          variant="outlined"
+                          sx={{ height: 24, fontSize: 11, borderColor: '#666', color: '#666' }}
+                        />
+                      </Box>
+                    </Grid>
+                    <Grid item xs={12} md={4}>
+                      <Box sx={{ p: 2, border: '1px solid #e0e0e0', borderRadius: 1, textAlign: 'center' }}>
+                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: 11, fontWeight: 500, mb: 1 }}>
+                          Retention Policy
+                        </Typography>
+                        <Typography variant="body2" sx={{ fontSize: 12, color: '#333' }}>
+                          {selectedAssetDetails.retention_policy || 'No policy defined'}
+                        </Typography>
+                      </Box>
+                    </Grid>
+                    <Grid item xs={12} md={4}>
+                      <Box sx={{ p: 2, border: '1px solid #e0e0e0', borderRadius: 1, textAlign: 'center' }}>
+                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: 11, fontWeight: 500, mb: 1 }}>
+                          Data Quality
+                        </Typography>
+                        <Typography variant="body2" sx={{ fontSize: 12, color: '#333' }}>
+                          {selectedAssetDetails.columns ? Math.round((selectedAssetDetails.columns.filter(col => col.description && col.description !== '-').length / selectedAssetDetails.columns.length) * 100) : 0}% Complete
+                        </Typography>
+                      </Box>
+                    </Grid>
+                  </Grid>
+                </Box>
+
+                {/* PII Analysis Summary */}
+                <Box>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 3, color: '#333' }}>
+                    PII Analysis Summary
+                  </Typography>
+                  <Grid container spacing={3}>
+                    <Grid item xs={12} md={4}>
+                      <Box sx={{ textAlign: 'center', p: 3, border: '1px solid #e0e0e0', borderRadius: 2, backgroundColor: '#fafafa' }}>
+                        <Typography variant="h4" sx={{ fontWeight: 600, color: '#333', mb: 1 }}>
+                          {selectedAssetDetails.columns ? selectedAssetDetails.columns.filter(col => detectPII(col.name, col.description)).length : 0}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: 12, fontWeight: 500 }}>
+                          PII Columns
+                        </Typography>
+                      </Box>
+                    </Grid>
+                    <Grid item xs={12} md={4}>
+                      <Box sx={{ textAlign: 'center', p: 3, border: '1px solid #e0e0e0', borderRadius: 2, backgroundColor: '#fafafa' }}>
+                        <Typography variant="h4" sx={{ fontWeight: 600, color: '#333', mb: 1 }}>
+                          {selectedAssetDetails.columns ? selectedAssetDetails.columns.length - selectedAssetDetails.columns.filter(col => detectPII(col.name, col.description)).length : 0}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: 12, fontWeight: 500 }}>
+                          Safe Columns
+                        </Typography>
+                      </Box>
+                    </Grid>
+                    <Grid item xs={12} md={4}>
+                      <Box sx={{ textAlign: 'center', p: 3, border: '1px solid #e0e0e0', borderRadius: 2, backgroundColor: '#fafafa' }}>
+                        <Typography variant="h4" sx={{ fontWeight: 600, color: '#333', mb: 1 }}>
+                          {selectedAssetDetails.columns ? Math.round((selectedAssetDetails.columns.filter(col => detectPII(col.name, col.description)).length / selectedAssetDetails.columns.length) * 100) : 0}%
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: 12, fontWeight: 500 }}>
+                          PII Percentage
+                        </Typography>
+                      </Box>
+                    </Grid>
+                  </Grid>
+                </Box>
+              </Box>
+            )}
+
+            {/* Data Quality Tab */}
+            {activeDetailTab === 'quality' && (
+              <Box>
+                <Typography variant="h6" sx={{ fontWeight: 600, mb: 3, color: '#333' }}>
+                  Data Quality Metrics
+                </Typography>
+                <Grid container spacing={3}>
+                  <Grid item xs={12} md={4}>
+                    <Box sx={{ textAlign: 'center', p: 2, backgroundColor: '#f9f9f9', borderRadius: 1 }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ fontSize: 12, fontWeight: 500, mb: 1 }}>
+                        Column Completeness
+                      </Typography>
+                      <Typography variant="h4" sx={{ fontWeight: 600, color: '#4caf50' }}>
+                        {selectedAssetDetails.columns ? Math.round((selectedAssetDetails.columns.filter(col => col.description && col.description !== '-').length / selectedAssetDetails.columns.length) * 100) : 0}%
+                      </Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} md={4}>
+                    <Box sx={{ textAlign: 'center', p: 2, backgroundColor: '#f9f9f9', borderRadius: 1 }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ fontSize: 12, fontWeight: 500, mb: 1 }}>
+                        Lineage Coverage
+                      </Typography>
+                      <Typography variant="h4" sx={{ fontWeight: 600, color: '#1976d2' }}>
+                        {fullLineageData.rawData?.edges?.filter(e => e.source === selectedAssetDetails.id || e.target === selectedAssetDetails.id).length || 0}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ fontSize: 11 }}>
+                        connections
+                      </Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} md={4}>
+                    <Box sx={{ textAlign: 'center', p: 2, backgroundColor: '#f9f9f9', borderRadius: 1 }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ fontSize: 12, fontWeight: 500, mb: 1 }}>
+                        Data Types
+                      </Typography>
+                      <Typography variant="h4" sx={{ fontWeight: 600, color: '#ff9800' }}>
+                        {selectedAssetDetails.columns ? [...new Set(selectedAssetDetails.columns.map(col => col.type))].length : 0}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ fontSize: 11 }}>
+                        unique types
+                      </Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Box>
+                      <Typography variant="body2" color="text.secondary" sx={{ fontSize: 12, fontWeight: 500, mb: 1 }}>
+                        Data Types Used
+                      </Typography>
+                      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                        {selectedAssetDetails.columns ? 
+                          [...new Set(selectedAssetDetails.columns.map(col => col.type))].map((type, index) => (
+                            <Chip 
+                              key={index}
+                              label={type} 
+                              size="small" 
+                              variant="outlined"
+                              sx={{ borderColor: '#ddd', color: '#666' }}
+                            />
+                          )) : null
+                        }
+                      </Box>
+                    </Box>
+                  </Grid>
+                </Grid>
+              </Box>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Asset Details Popup Dialog */}
       <Dialog
         open={detailsDialogOpen}
         onClose={handleCloseDialog}
@@ -874,8 +1503,18 @@ const DataLineagePage = () => {
                     {selectedNode.name}
                   </Typography>
                   <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
-                    <Chip label={selectedNode.type} size="small" color="primary" />
-                    <Chip label={selectedNode.catalog} size="small" variant="outlined" />
+                    <Chip label={selectedNode.type || 'Unknown'} size="small" color="primary" />
+                    <Chip 
+                      label={selectedNode.source_system || selectedNode.connector_id || 'Unknown'} 
+                      size="small" 
+                      variant="outlined"
+                      sx={{ 
+                        borderColor: '#999',
+                        color: '#555',
+                        backgroundColor: '#f5f5f5',
+                        minWidth: '60px'
+                      }}
+                    />
                   </Box>
                 </Box>
                 <IconButton onClick={handleCloseDialog}>
@@ -887,7 +1526,31 @@ const DataLineagePage = () => {
               {selectedNode.error ? (
                 <Alert severity="error">{selectedNode.error}</Alert>
               ) : (
-                <Grid container spacing={2}>
+                <Grid container spacing={3}>
+                  <Grid item xs={12}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Asset ID
+                    </Typography>
+                    <Typography variant="body2" sx={{ wordBreak: 'break-all', fontFamily: 'monospace' }}>
+                      {selectedNode.id}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Type
+                    </Typography>
+                    <Typography variant="body2">
+                      {selectedNode.type}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Source System
+                    </Typography>
+                    <Typography variant="body2">
+                      {selectedNode.source_system || selectedNode.connector_id || 'Unknown'}
+                    </Typography>
+                  </Grid>
                   <Grid item xs={12}>
                     <Typography variant="subtitle2" color="text.secondary">
                       Description
@@ -895,20 +1558,6 @@ const DataLineagePage = () => {
                     <Typography variant="body1">
                       {selectedNode.description || 'No description available'}
                     </Typography>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Typography variant="subtitle2" color="text.secondary">
-                      Asset ID
-                    </Typography>
-                    <Typography variant="body2" sx={{ wordBreak: 'break-all' }}>
-                      {selectedNode.id}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Typography variant="subtitle2" color="text.secondary">
-                      Status
-                    </Typography>
-                    <Chip label={selectedNode.status || 'active'} size="small" color="success" />
                   </Grid>
                   {selectedNode.columns && selectedNode.columns.length > 0 && (
                     <Grid item xs={12}>
@@ -919,21 +1568,52 @@ const DataLineagePage = () => {
                         <Table size="small">
                           <TableHead>
                             <TableRow>
-                              <TableCell>Name</TableCell>
-                              <TableCell>Type</TableCell>
-                              <TableCell>Description</TableCell>
+                              <TableCell sx={{ fontWeight: 600, backgroundColor: '#f5f5f5' }}>Name</TableCell>
+                              <TableCell sx={{ fontWeight: 600, backgroundColor: '#f5f5f5' }}>Type</TableCell>
+                              <TableCell sx={{ fontWeight: 600, backgroundColor: '#f5f5f5' }}>PII</TableCell>
+                              <TableCell sx={{ fontWeight: 600, backgroundColor: '#f5f5f5' }}>Description</TableCell>
                             </TableRow>
                           </TableHead>
                           <TableBody>
-                            {selectedNode.columns.slice(0, 10).map((col, index) => (
+                            {selectedNode.columns.slice(0, 10).map((col, index) => {
+                              const isPII = detectPII(col.name, col.description);
+                              return (
                               <TableRow key={index}>
-                                <TableCell>{col.name}</TableCell>
+                                  <TableCell sx={{ fontFamily: 'monospace', fontWeight: 500 }}>
+                                    {col.name}
+                                  </TableCell>
                                 <TableCell>
-                                  <Chip label={col.type} size="small" variant="outlined" />
+                                    <Chip 
+                                      label={col.type} 
+                                      size="small" 
+                                      variant="outlined"
+                                      sx={{ borderColor: '#ddd', color: '#666' }}
+                                    />
                                 </TableCell>
-                                <TableCell>{col.description || '-'}</TableCell>
+                                  <TableCell>
+                                    {isPII ? (
+                                      <Chip 
+                                        label="PII" 
+                                        size="small" 
+                                        color="error"
+                                        sx={{ fontWeight: 600 }}
+                                      />
+                                    ) : (
+                                      <Chip 
+                                        label="Safe" 
+                                        size="small" 
+                                        color="success"
+                                        variant="outlined"
+                                        sx={{ fontWeight: 500 }}
+                                      />
+                                    )}
+                                  </TableCell>
+                                  <TableCell sx={{ color: '#666' }}>
+                                    {col.description || '-'}
+                                  </TableCell>
                               </TableRow>
-                            ))}
+                              );
+                            })}
                           </TableBody>
                         </Table>
                       </TableContainer>
@@ -949,6 +1629,16 @@ const DataLineagePage = () => {
             </DialogContent>
             <DialogActions>
               <Button onClick={handleCloseDialog}>Close</Button>
+              <Button 
+                variant="contained" 
+                onClick={() => {
+                  setSelectedAssetDetails(selectedNode);
+                  setActiveDetailTab('basic');
+                  handleCloseDialog();
+                }}
+              >
+                View Full Details
+              </Button>
             </DialogActions>
           </>
         )}
@@ -988,6 +1678,7 @@ const DataLineagePage = () => {
                         <TableCell>→</TableCell>
                         <TableCell>Target Column</TableCell>
                         <TableCell>Relationship</TableCell>
+                        <TableCell>Transformation</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
@@ -1027,6 +1718,26 @@ const DataLineagePage = () => {
                                 colRel.relationship_type === 'transformed' ? 'warning' : 'info'
                               }
                             />
+                          </TableCell>
+                          <TableCell>
+                            {colRel.transformation_type ? (
+                              <Box>
+                                <Chip 
+                                  label={colRel.transformation_type} 
+                                  size="small" 
+                                  color="primary"
+                                  variant="outlined"
+                                  sx={{ mb: 0.5 }}
+                                />
+                                {colRel.transformation_expression && (
+                                  <Typography variant="caption" sx={{ display: 'block', color: '#666', fontFamily: 'monospace' }}>
+                                    {colRel.transformation_expression}
+                                  </Typography>
+                                )}
+                              </Box>
+                            ) : (
+                              <Typography variant="caption" color="text.secondary">-</Typography>
+                            )}
                           </TableCell>
                         </TableRow>
                       ))}

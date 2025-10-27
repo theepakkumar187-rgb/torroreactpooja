@@ -12,6 +12,7 @@ import ConnectorsPage from './pages/ConnectorsPage';
 import AssetsPage from './pages/AssetsPage';
 import MarketplacePage from './pages/MarketplacePage';
 import DataLineagePage from './pages/DataLineagePage';
+import TrinoGovernanceControlPage from './pages/TrinoGovernanceControlPage';
 
 // Theme
 const theme = createTheme({
@@ -91,6 +92,7 @@ function App() {
             <Route path="assets" element={<AssetsPage />} />
             <Route path="lineage" element={<DataLineagePage />} />
             <Route path="marketplace" element={<MarketplacePage />} />
+            <Route path="governance" element={<TrinoGovernanceControlPage />} />
           </Route>
         </Routes>
       </Router>

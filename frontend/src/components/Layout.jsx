@@ -12,10 +12,19 @@ import Sidebar from './Sidebar';
 const Layout = () => {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [stats, setStats] = useState({});
+  const [stats, setStats] = useState({
+    total_assets: 0,
+    total_catalogs: 0,
+    active_connectors: 0,
+    last_scan: null,
+    monitoring_status: 'Unknown'
+  });
 
   useEffect(() => {
     fetchDashboardData();
+    // Refresh stats every 30 seconds
+    const interval = setInterval(fetchDashboardData, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const fetchDashboardData = async () => {

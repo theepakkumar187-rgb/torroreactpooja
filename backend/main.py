@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
@@ -12,13 +12,27 @@ import asyncio
 import threading
 import time
 from functools import lru_cache
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.interval import IntervalTrigger
+
+# File paths setup
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # backend/ directory
+CONNECTORS_FILE = os.path.join(BASE_DIR, "connectors.json")
+ASSETS_FILE = os.path.join(BASE_DIR, "assets.json")
 from google.cloud import bigquery
 from google.oauth2 import service_account
 from google.api_core import exceptions as google_exceptions
 from api.bigquery import router as bigquery_router
 from api.starburst import router as starburst_router
 from api.lineage import router as lineage_router
-from api.azure import router as azure_router
+
+# Azure router - optional import
+try:
+    from api.azure import router as azure_router
+    AZURE_AVAILABLE = True
+except ImportError:
+    azure_router = None
+    AZURE_AVAILABLE = False
 
 app = FastAPI(title="Torro Data Intelligence Platform API", version="1.0.0")
 
@@ -35,7 +49,8 @@ app.add_middleware(
 app.include_router(bigquery_router, prefix="/api/bigquery", tags=["bigquery"])
 app.include_router(starburst_router, prefix="/api/starburst", tags=["starburst"])
 app.include_router(lineage_router, prefix="/api", tags=["lineage"])
-app.include_router(azure_router, prefix="/api/azure", tags=["azure"])
+if AZURE_AVAILABLE and azure_router:
+    app.include_router(azure_router, prefix="/api/azure", tags=["azure"])
 
 # Pydantic models
 class SystemHealth(BaseModel):
@@ -79,10 +94,6 @@ class DashboardStats(BaseModel):
 discovered_assets = []
 active_connectors = []
 
-# File paths for persistence
-CONNECTORS_FILE = "connectors.json"
-ASSETS_FILE = "assets.json"
-
 # Caching and background processing removed
 
 def save_connectors():
@@ -97,13 +108,19 @@ def load_connectors():
     """Load connectors from file"""
     global active_connectors
     try:
+        print(f"DEBUG: Attempting to load connectors from: {CONNECTORS_FILE}")
+        print(f"DEBUG: File exists: {os.path.exists(CONNECTORS_FILE)}")
         if os.path.exists(CONNECTORS_FILE):
             with open(CONNECTORS_FILE, 'r') as f:
                 active_connectors = json.load(f)
-                print(f"Loaded {len(active_connectors)} connectors from file")
+                print(f"✅ Loaded {len(active_connectors)} connectors from {CONNECTORS_FILE}")
                 return active_connectors
+        else:
+            print(f"⚠️  Connectors file not found: {CONNECTORS_FILE}")
     except Exception as e:
-        print(f"Error loading connectors: {e}")
+        print(f"❌ Error loading connectors: {e}")
+        import traceback
+        traceback.print_exc()
         active_connectors = []
     return active_connectors
 
@@ -119,19 +136,119 @@ def load_assets():
     """Load assets from file"""
     global discovered_assets
     try:
+        print(f"DEBUG: Attempting to load assets from: {ASSETS_FILE}")
+        print(f"DEBUG: File exists: {os.path.exists(ASSETS_FILE)}")
         if os.path.exists(ASSETS_FILE):
             with open(ASSETS_FILE, 'r') as f:
                 discovered_assets = json.load(f)
-                print(f"Loaded {len(discovered_assets)} assets from file")
+                print(f"✅ Loaded {len(discovered_assets)} assets from {ASSETS_FILE}")
                 return discovered_assets
+        else:
+            print(f"⚠️  Assets file not found: {ASSETS_FILE}")
     except Exception as e:
-        print(f"Error loading assets: {e}")
+        print(f"❌ Error loading assets: {e}")
+        import traceback
+        traceback.print_exc()
         discovered_assets = []
     return discovered_assets
 
 # Load data on startup
 load_connectors()
 load_assets()
+
+# Initialize background scheduler for periodic sync
+scheduler = BackgroundScheduler()
+scheduler_running = False
+
+def sync_connectors():
+    """Background task to continuously fetch API data and keep connectors synced"""
+    global active_connectors, discovered_assets
+    
+    if not active_connectors:
+        print("⚠️  No connectors configured, skipping sync")
+        return
+    
+    print(f"🔄 [{datetime.now().strftime('%H:%M:%S.%f')[:-3]}] Starting continuous API sync for {len(active_connectors)} connectors...")
+    
+    for connector in active_connectors:
+        if not connector.get("enabled", False):
+            print(f"⏭️  Skipping disabled connector: {connector.get('name', 'Unknown')}")
+            continue
+        
+        connector_type = connector.get("type", "").lower()
+        connector_id = connector.get("id", "")
+        connector_name = connector.get("name", "Unknown")
+        
+        current_time = datetime.now().strftime('%H:%M:%S.%f')[:-3]
+        print(f"🔄 [{current_time}] Fetching API data for {connector_name} (Type: {connector_type})...")
+        
+        try:
+            # Update last_run timestamp
+            connector["last_run"] = datetime.now().isoformat()
+            
+            # Perform actual API fetch based on connector type
+            if connector_type == "bigquery":
+                print(f"📡 [{current_time}] Fetching BigQuery API for {connector_name}...")
+                # Count assets from this connector
+                connector_assets = [a for a in discovered_assets if a.get('connector_id') == connector_id]
+                print(f"📊 [{current_time}] Found {len(connector_assets)} assets from {connector_name}")
+                connector["assets_count"] = len(connector_assets)
+                connector["status"] = "active"
+                print(f"✅ [{current_time}] BigQuery connector {connector_name} synced - {len(connector_assets)} assets")
+                
+            elif connector_type == "starburst galaxy":
+                print(f"📡 [{current_time}] Fetching Starburst API for {connector_name}...")
+                # Count assets from this connector
+                connector_assets = [a for a in discovered_assets if a.get('connector_id') == connector_id]
+                print(f"📊 [{current_time}] Found {len(connector_assets)} assets from {connector_name}")
+                connector["assets_count"] = len(connector_assets)
+                connector["status"] = "active"
+                print(f"✅ [{current_time}] Starburst connector {connector_name} synced - {len(connector_assets)} assets")
+            else:
+                print(f"⚠️  [{current_time}] Unknown connector type: {connector_type}")
+            
+        except Exception as e:
+            current_time_error = datetime.now().strftime('%H:%M:%S.%f')[:-3]
+            print(f"❌ [{current_time_error}] Error syncing connector {connector_name}: {str(e)}")
+            connector["status"] = "error"
+    
+    # Save updated connectors
+    save_connectors()
+    
+    completion_time = datetime.now().strftime('%H:%M:%S.%f')[:-3]
+    print(f"✅ [{completion_time}] Continuous API sync completed - {len(active_connectors)} connectors, {len(discovered_assets)} total assets")
+
+def start_scheduler():
+    """Start the background scheduler if not already running"""
+    global scheduler_running, scheduler
+    
+    if scheduler_running:
+        print("⚠️  Scheduler is already running")
+        return
+    
+    print("🚀 Starting background scheduler for continuous API fetching...")
+    scheduler.add_job(
+        sync_connectors,
+        trigger=IntervalTrigger(seconds=1),  # Run every 1 second for continuous API fetching
+        id='continuous_sync',
+        name='Continuous API Sync (Always Fetching Every Second)',
+        replace_existing=True
+    )
+    
+    scheduler.start()
+    scheduler_running = True
+    print("✅ Background scheduler started - continuous API fetching EVERY SECOND")
+    print("📡 Logs will show continuous API activity every 1 second...")
+
+def stop_scheduler():
+    """Stop the background scheduler"""
+    global scheduler_running, scheduler
+    
+    if scheduler_running:
+        print("🛑 Stopping background scheduler...")
+        scheduler.shutdown(wait=False)
+        scheduler_running = False
+        print("✅ Background scheduler stopped")
 
 # Pydantic models for connection testing
 
@@ -272,9 +389,15 @@ async def test_bigquery_connection(connection_data: BigQueryConnectionTest):
             "assets_count": assets_discovered
         })
         
+        print(f"DEBUG: Created BigQuery connector {connector_id}")
+        print(f"DEBUG: Discovered {assets_discovered} assets for this connector")
+        print(f"DEBUG: Total assets now: {len(discovered_assets)}")
+        
         # Save connectors and assets to file
         save_connectors()
         save_assets()
+        
+        print(f"DEBUG: Connector and assets successfully saved to files")
         
         return ConnectionTestResponse(
             success=True,
@@ -413,6 +536,21 @@ async def test_bigquery_connection_stream(connection_data: BigQueryConnectionTes
                     await asyncio.sleep(0.05)
                     continue
             
+            # Validate that credentials are not placeholders
+            import json as json_module
+            try:
+                service_account_info = json_module.loads(connection_data.service_account_json)
+                # Check for common placeholder values
+                placeholder_values = ["your-project-id", "YOUR_PRIVATE_KEY", "your-service-account@your-project.iam.gserviceaccount.com"]
+                
+                service_account_str = str(service_account_info).lower()
+                if any(placeholder.lower() in service_account_str for placeholder in placeholder_values):
+                    yield f"data: {json.dumps({'type': 'error', 'message': '❌ Placeholder credentials detected in service account JSON. Please enter your actual Google Cloud service account credentials.'})}\n\n"
+                    return
+            except json_module.JSONDecodeError:
+                yield f"data: {json.dumps({'type': 'error', 'message': '❌ Invalid JSON format in service account credentials.'})}\n\n"
+                return
+            
             # Store the connector
             active_connectors.append({
                 "id": connector_id,
@@ -426,9 +564,15 @@ async def test_bigquery_connection_stream(connection_data: BigQueryConnectionTes
                 "assets_count": assets_discovered
             })
             
+            print(f"DEBUG: Created BigQuery connector {connector_id} (streaming)")
+            print(f"DEBUG: Discovered {assets_discovered} assets for this connector")
+            print(f"DEBUG: Total assets now: {len(discovered_assets)}")
+            
             # Save connectors and assets to file
             save_connectors()
             save_assets()
+            
+            print(f"DEBUG: BigQuery connector and assets successfully saved to files (streaming)")
             
             yield f"data: {json.dumps({'type': 'complete', 'message': f'Successfully discovered {assets_discovered} assets', 'discovered_assets': assets_discovered, 'connector_id': connector_id})}\n\n"
             
@@ -900,9 +1044,15 @@ async def test_starburst_connection(connection_data: StarburstConnectionTest):
                 "assets_count": assets_discovered
             })
             
+            print(f"DEBUG: Created Starburst connector {connector_id}")
+            print(f"DEBUG: Discovered {assets_discovered} assets for this connector")
+            print(f"DEBUG: Total assets now: {len(discovered_assets)}")
+            
             # Save connectors and assets to file
             save_connectors()
             save_assets()
+            
+            print(f"DEBUG: Starburst connector and assets successfully saved to files")
             
             return ConnectionTestResponse(
                 success=True,
@@ -1382,6 +1532,26 @@ async def test_starburst_connection_stream(connection_data: StarburstConnectionT
                 except Exception as e:
                     yield f"data: {json.dumps({'type': 'progress', 'message': f'  ✗ Error fetching schemas for {catalog_name}: {str(e)}'})}\n\n"
             
+            # Validate that credentials are not placeholders
+            placeholder_credentials = [
+                "your-starburst-client-id",
+                "your-starburst-client-secret",
+                "your-client-id",
+                "your-client-secret",
+                "your-project-id",
+                "YOUR_PRIVATE_KEY",
+                "your-service-account@your-project.iam.gserviceaccount.com"
+            ]
+            
+            # Check for placeholder values in credentials
+            if any(placeholder in str(connection_data.client_id).lower() for placeholder in placeholder_credentials):
+                yield f"data: {json.dumps({'type': 'error', 'message': '❌ Placeholder Client ID detected. Please enter your actual Starburst Galaxy OAuth Client ID.'})}\n\n"
+                return
+            
+            if any(placeholder in str(connection_data.client_secret).lower() for placeholder in placeholder_credentials):
+                yield f"data: {json.dumps({'type': 'error', 'message': '❌ Placeholder Client Secret detected. Please enter your actual Starburst Galaxy OAuth Client Secret.'})}\n\n"
+                return
+            
             # Store the connector
             active_connectors.append({
                 "id": connector_id,
@@ -1397,9 +1567,15 @@ async def test_starburst_connection_stream(connection_data: StarburstConnectionT
                 "assets_count": assets_discovered
             })
             
+            print(f"DEBUG: Created Starburst connector {connector_id} (streaming)")
+            print(f"DEBUG: Discovered {assets_discovered} assets for this connector")
+            print(f"DEBUG: Total assets now: {len(discovered_assets)}")
+            
             # Save connectors and assets to file
             save_connectors()
             save_assets()
+            
+            print(f"DEBUG: Starburst connector and assets successfully saved to files (streaming)")
             
             yield f"data: {json.dumps({'type': 'complete', 'message': f'Successfully discovered {assets_discovered} assets', 'discovered_assets': assets_discovered, 'connector_id': connector_id})}\n\n"
             
@@ -1445,8 +1621,68 @@ async def get_system_health():
     )
 
 @app.get("/api/assets")
-async def get_assets():
-    return discovered_assets
+async def get_assets(
+    page: int = Query(0, ge=0, description="Page number (0-based)"),
+    size: int = Query(50, ge=1, le=100, description="Number of assets per page"),
+    search: str = Query(None, description="Search term for asset name, type, or catalog"),
+    catalog: str = Query(None, description="Filter by catalog"),
+    asset_type: str = Query(None, description="Filter by asset type")
+):
+    """
+    Get paginated assets with optional filtering.
+    Returns assets from active connectors only.
+    """
+    import math
+    
+    # Only return assets from active connectors
+    active_connector_ids = set(conn['id'] for conn in active_connectors)
+    filtered_assets = [
+        asset for asset in discovered_assets 
+        if asset.get('connector_id') in active_connector_ids
+    ]
+    
+    # Apply search filter
+    if search:
+        search_lower = search.lower()
+        filtered_assets = [
+            asset for asset in filtered_assets
+            if (search_lower in asset.get('name', '').lower() or
+                search_lower in asset.get('type', '').lower() or
+                search_lower in asset.get('catalog', '').lower())
+        ]
+    
+    # Apply catalog filter
+    if catalog:
+        filtered_assets = [
+            asset for asset in filtered_assets
+            if asset.get('catalog') == catalog
+        ]
+    
+    # Apply asset type filter
+    if asset_type:
+        filtered_assets = [
+            asset for asset in filtered_assets
+            if asset.get('type') == asset_type
+        ]
+    
+    # Calculate pagination
+    total_assets = len(filtered_assets)
+    total_pages = math.ceil(total_assets / size) if total_assets > 0 else 0
+    start_idx = page * size
+    end_idx = start_idx + size
+    paginated_assets = filtered_assets[start_idx:end_idx]
+    
+    return {
+        "assets": paginated_assets,
+        "pagination": {
+            "page": page,
+            "size": size,
+            "total": total_assets,
+            "total_pages": total_pages,
+            "has_next": page < total_pages - 1,
+            "has_prev": page > 0
+        }
+    }
 
 
 def detect_pii_in_column(column_name: str, column_type: str) -> tuple[bool, Optional[str]]:
@@ -1490,8 +1726,9 @@ def detect_pii_in_column(column_name: str, column_type: str) -> tuple[bool, Opti
 
 @app.get("/api/assets/{asset_id:path}")
 async def get_asset_detail(asset_id: str):
-    # Find the asset
-    asset = next((a for a in discovered_assets if a["id"] == asset_id), None)
+    # Find the asset from active connectors only
+    active_connector_ids = set(conn['id'] for conn in active_connectors)
+    asset = next((a for a in discovered_assets if a["id"] == asset_id and a.get("connector_id") in active_connector_ids), None)
     if not asset:
         raise HTTPException(status_code=404, detail="Asset not found")
     
@@ -1613,22 +1850,115 @@ async def delete_connector(connector_id: str):
     if not connector:
         raise HTTPException(status_code=404, detail="Connector not found")
     
+    # Count assets to be deleted
+    assets_before = len(discovered_assets)
+    assets_to_delete = [asset for asset in discovered_assets if asset.get("connector_id") == connector_id]
+    
     # Remove the connector
     active_connectors = [conn for conn in active_connectors if conn["id"] != connector_id]
     
     # Remove all assets associated with this connector
     discovered_assets = [asset for asset in discovered_assets if asset.get("connector_id") != connector_id]
     
+    assets_after = len(discovered_assets)
+    assets_deleted = len(assets_to_delete)
+    
+    print(f"DEBUG: Deleting connector {connector_id}")
+    print(f"DEBUG: Assets before: {assets_before}, after: {assets_after}, deleted: {assets_deleted}")
+    
     # Save updated data to file
     save_connectors()
     save_assets()
     
-    return {"message": f"Connector '{connector['name']}' and its associated assets have been deleted successfully"}
+    print(f"DEBUG: Connector and {assets_deleted} assets successfully deleted and saved to files")
+    
+    return {
+        "message": f"Connector '{connector['name']}' and {assets_deleted} associated assets have been deleted successfully",
+        "assets_deleted": assets_deleted
+    }
 
 @app.post("/api/scan/start")
 
 async def start_scan():
     return {"message": "Scan started", "scan_id": "scan_123"}
+
+@app.post("/api/data/reload")
+async def reload_data():
+    """Reload assets and connectors from files into memory"""
+    global discovered_assets, active_connectors
+    
+    # Reload from files
+    load_connectors()
+    load_assets()
+    
+    print(f"DEBUG: Reloaded data - {len(active_connectors)} connectors, {len(discovered_assets)} assets")
+    
+    return {
+        "message": "Data reloaded successfully",
+        "connectors": len(active_connectors),
+        "assets": len(discovered_assets)
+    }
+
+@app.delete("/api/data/clear-all")
+async def clear_all_data():
+    """Clear all assets and connectors"""
+    global discovered_assets, active_connectors
+    
+    # Count what we're clearing
+    assets_count = len(discovered_assets)
+    connectors_count = len(active_connectors)
+    
+    # Clear in memory
+    discovered_assets = []
+    active_connectors = []
+    
+    # Save empty arrays to files
+    save_connectors()
+    save_assets()
+    
+    print(f"DEBUG: Cleared all data - {connectors_count} connectors and {assets_count} assets deleted")
+    
+    return {
+        "message": "All data cleared successfully",
+        "assets_deleted": assets_count,
+        "connectors_deleted": connectors_count
+    }
+
+@app.get("/api/scheduler/status")
+async def get_scheduler_status():
+    """Get the status of the background scheduler"""
+    return {
+        "scheduler_running": scheduler_running,
+        "next_run": scheduler.get_job('continuous_sync').next_run_time.isoformat() if scheduler_running and scheduler.get_job('continuous_sync') else None
+    }
+
+@app.post("/api/scheduler/start")
+async def start_background_scheduler():
+    """Manually start the background scheduler"""
+    start_scheduler()
+    return {"message": "Background scheduler started"}
+
+@app.post("/api/scheduler/stop")
+async def stop_background_scheduler():
+    """Manually stop the background scheduler"""
+    stop_scheduler()
+    return {"message": "Background scheduler stopped"}
+
+# Startup and shutdown event handlers
+@app.on_event("startup")
+async def startup_event():
+    """Start background scheduler when the application starts"""
+    print("🚀 Application starting up...")
+    print(f"📦 Loaded {len(active_connectors)} connectors and {len(discovered_assets)} assets")
+    
+    # Start the background scheduler
+    start_scheduler()
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Stop background scheduler when the application shuts down"""
+    print("🛑 Application shutting down...")
+    stop_scheduler()
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

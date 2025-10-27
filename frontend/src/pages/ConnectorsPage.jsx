@@ -128,8 +128,8 @@ const ConnectorsPage = () => {
     },
     {
       id: 'azure',
-      name: 'Azure Synapse',
-      description: 'Microsoft cloud analytics service',
+      name: 'Azure Purview',
+      description: 'Microsoft unified data governance service',
       logo: 'https://www.vectorlogo.zone/logos/microsoft_azure/microsoft_azure-icon.svg',
       fallbackIcon: <Cloud />,
       color: '#0078D4',
@@ -193,6 +193,23 @@ const ConnectorsPage = () => {
           account_domain: config.accountDomain,
           client_id: config.clientId,
           client_secret: config.clientSecret,
+          connection_name: config.name
+        };
+      } else if (connectionType === 'Service Principal' && selectedConnector?.id === 'azure') {
+        url = 'http://localhost:8000/api/azure/test-connection';
+        body = {
+          purview_account_name: config.purviewAccountName,
+          tenant_id: config.tenantId,
+          client_id: config.clientId,
+          client_secret: config.clientSecret,
+          connection_name: config.name
+        };
+      } else if (connectionType === 'Managed Identity' && selectedConnector?.id === 'azure') {
+        url = 'http://localhost:8000/api/azure/test-connection';
+        body = {
+          purview_account_name: config.purviewAccountName,
+          tenant_id: config.tenantId,
+          managed_identity_client_id: config.managedIdentityClientId || null,
           connection_name: config.name
         };
       } else {
@@ -380,26 +397,81 @@ const ConnectorsPage = () => {
                   <Grid item xs={12}>
                     <TextField
                       fullWidth
+                      required
+                      label="Purview Account Name"
+                      value={config.purviewAccountName || ''}
+                      onChange={(e) => setConfig({...config, purviewAccountName: e.target.value})}
+                      placeholder="my-purview-account"
+                      helperText="Your Azure Purview account name"
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      required
                       label="Tenant ID"
                       value={config.tenantId || ''}
                       onChange={(e) => setConfig({...config, tenantId: e.target.value})}
+                      placeholder="12345678-1234-1234-1234-123456789012"
+                      helperText="Azure AD Tenant ID"
                     />
                   </Grid>
                   <Grid item xs={12}>
                     <TextField
                       fullWidth
+                      required
                       label="Client ID"
                       value={config.clientId || ''}
                       onChange={(e) => setConfig({...config, clientId: e.target.value})}
+                      placeholder="12345678-1234-1234-1234-123456789012"
+                      helperText="Azure AD Application (Client) ID"
                     />
                   </Grid>
                   <Grid item xs={12}>
                     <TextField
                       fullWidth
+                      required
                       label="Client Secret"
                       type="password"
                       value={config.clientSecret || ''}
                       onChange={(e) => setConfig({...config, clientSecret: e.target.value})}
+                      helperText="Azure AD Application Client Secret"
+                    />
+                  </Grid>
+                </>
+              )}
+              {connectionType === 'Managed Identity' && (
+                <>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      required
+                      label="Purview Account Name"
+                      value={config.purviewAccountName || ''}
+                      onChange={(e) => setConfig({...config, purviewAccountName: e.target.value})}
+                      placeholder="my-purview-account"
+                      helperText="Your Azure Purview account name"
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      required
+                      label="Tenant ID"
+                      value={config.tenantId || ''}
+                      onChange={(e) => setConfig({...config, tenantId: e.target.value})}
+                      placeholder="12345678-1234-1234-1234-123456789012"
+                      helperText="Azure AD Tenant ID"
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="Managed Identity Client ID"
+                      value={config.managedIdentityClientId || ''}
+                      onChange={(e) => setConfig({...config, managedIdentityClientId: e.target.value})}
+                      placeholder="12345678-1234-1234-1234-123456789012"
+                      helperText="Optional: User-assigned managed identity client ID. Leave empty for system-assigned."
                     />
                   </Grid>
                 </>
@@ -502,7 +574,8 @@ const ConnectorsPage = () => {
                     !config.name ||
                     (connectionType === 'Service Account' && (!config.projectId || !config.serviceAccount)) ||
                     (connectionType === 'API Token' && (!config.accountDomain || !config.clientId || !config.clientSecret)) ||
-                    (connectionType === 'Service Principal' && (!config.tenantId || !config.clientId || !config.clientSecret))
+                    (connectionType === 'Service Principal' && (!config.purviewAccountName || !config.tenantId || !config.clientId || !config.clientSecret)) ||
+                    (connectionType === 'Managed Identity' && (!config.purviewAccountName || !config.tenantId))
                   }
                 >
                   Test Connection
@@ -869,7 +942,8 @@ const ConnectorsPage = () => {
                       !config.name || 
                       (connectionType === 'Service Account' && (!config.projectId || !config.serviceAccount)) ||
                       (connectionType === 'API Token' && (!config.accountDomain || !config.clientId || !config.clientSecret)) ||
-                      (connectionType === 'Service Principal' && (!config.tenantId || !config.clientId || !config.clientSecret))
+                      (connectionType === 'Service Principal' && (!config.purviewAccountName || !config.tenantId || !config.clientId || !config.clientSecret)) ||
+                      (connectionType === 'Managed Identity' && (!config.purviewAccountName || !config.tenantId))
                     )) ||
                     (activeStep === 2 && !testResult)
                   }
