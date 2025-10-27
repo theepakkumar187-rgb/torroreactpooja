@@ -46,6 +46,8 @@ const TrinoGovernanceControlPage = () => {
   const [viewMode, setViewMode] = useState('overview'); // overview, roles, assets, users
   const [rolesPage, setRolesPage] = useState(0);
   const [assetsPage, setAssetsPage] = useState(0);
+  const [distributionDialogOpen, setDistributionDialogOpen] = useState(false);
+  const [rolesStatusDialogOpen, setRolesStatusDialogOpen] = useState(false);
 
   useEffect(() => {
     loadGovernanceData();
@@ -363,7 +365,17 @@ const TrinoGovernanceControlPage = () => {
 
         {/* Distribution Chart */}
         <Grid item xs={12} md={6}>
-          <Card>
+          <Card 
+            sx={{ 
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              '&:hover': {
+                boxShadow: 4,
+                transform: 'translateY(-2px)'
+              }
+            }}
+            onClick={() => setDistributionDialogOpen(true)}
+          >
             <CardContent>
               <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
                 📊 Distribution Overview
@@ -402,7 +414,17 @@ const TrinoGovernanceControlPage = () => {
 
         {/* Active vs Orphaned Roles */}
         <Grid item xs={12} md={6}>
-          <Card>
+          <Card
+            sx={{ 
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              '&:hover': {
+                boxShadow: 4,
+                transform: 'translateY(-2px)'
+              }
+            }}
+            onClick={() => setRolesStatusDialogOpen(true)}
+          >
             <CardContent>
               <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
                 🔐 Roles Status Breakdown
@@ -1102,6 +1124,116 @@ const TrinoGovernanceControlPage = () => {
                 </DialogActions>
               </>
             )}
+          </Dialog>
+
+          {/* Distribution Overview Dialog */}
+          <Dialog
+            open={distributionDialogOpen}
+            onClose={() => setDistributionDialogOpen(false)}
+            maxWidth="md"
+            fullWidth
+          >
+            <DialogTitle>
+              <Typography variant="h5" sx={{ fontWeight: 600 }}>
+                📊 Distribution Overview
+              </Typography>
+            </DialogTitle>
+            <DialogContent>
+              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '500px' }}>
+                <ResponsiveContainer width="100%" height={450}>
+                  <PieChart>
+                    <Pie
+                      data={[
+                        { name: 'Roles', value: governanceData.total_roles, color: '#1976d2' },
+                        { name: 'Users', value: governanceData.total_users, color: '#00D4AA' },
+                        { name: 'Protected Assets', value: governanceData.total_assets_with_rbac, color: '#f57c00' }
+                      ]}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={true}
+                      label={({ name, value, percent }) => `${name}: ${value} (${(percent * 100).toFixed(1)}%)`}
+                      outerRadius={150}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {[{ name: 'Roles', value: governanceData.total_roles, color: '#1976d2' },
+                        { name: 'Users', value: governanceData.total_users, color: '#00D4AA' },
+                        { name: 'Protected Assets', value: governanceData.total_assets_with_rbac, color: '#f57c00' }].map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </Box>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setDistributionDialogOpen(false)}>Close</Button>
+            </DialogActions>
+          </Dialog>
+
+          {/* Roles Status Breakdown Dialog */}
+          <Dialog
+            open={rolesStatusDialogOpen}
+            onClose={() => setRolesStatusDialogOpen(false)}
+            maxWidth="md"
+            fullWidth
+          >
+            <DialogTitle>
+              <Typography variant="h5" sx={{ fontWeight: 600 }}>
+                🔐 Roles Status Breakdown
+              </Typography>
+            </DialogTitle>
+            <DialogContent>
+              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '500px' }}>
+                <ResponsiveContainer width="100%" height={450}>
+                  <PieChart>
+                    <Pie
+                      data={[
+                        { 
+                          name: 'Active Roles', 
+                          value: governanceData.roles.filter(r => r.users.length > 0).length, 
+                          color: '#4caf50' 
+                        },
+                        { 
+                          name: 'Orphaned Roles', 
+                          value: governanceData.roles.length - governanceData.roles.filter(r => r.users.length > 0).length, 
+                          color: '#ff9800' 
+                        }
+                      ]}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={true}
+                      label={({ name, value, percent }) => `${name}: ${value} (${(percent * 100).toFixed(1)}%)`}
+                      outerRadius={150}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {[
+                        { 
+                          name: 'Active Roles', 
+                          value: governanceData.roles.filter(r => r.users.length > 0).length, 
+                          color: '#4caf50' 
+                        },
+                        { 
+                          name: 'Orphaned Roles', 
+                          value: governanceData.roles.length - governanceData.roles.filter(r => r.users.length > 0).length, 
+                          color: '#ff9800' 
+                        }
+                      ].map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </Box>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setRolesStatusDialogOpen(false)}>Close</Button>
+            </DialogActions>
           </Dialog>
 
           {/* User Details Dialog */}
