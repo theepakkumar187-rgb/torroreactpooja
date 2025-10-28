@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from google.cloud import bigquery
+from google.cloud import datacatalog_v1
 from google.oauth2 import service_account
 import os
 import json
@@ -9,6 +10,135 @@ import re
 from typing import List, Optional, Dict
 
 router = APIRouter()
+
+def create_policy_tag_taxonomy(project_id: str, credentials, taxonomy_name: str = "DataClassification") -> str:
+    """Create a policy tag taxonomy for data classification"""
+    try:
+        datacatalog_client = datacatalog_v1.PolicyTagManagerClient(credentials=credentials)
+        
+        # Check if taxonomy already exists
+        parent = f"projects/{project_id}/locations/us"
+        taxonomies = datacatalog_client.list_taxonomies(parent=parent)
+        
+        for taxonomy in taxonomies:
+            if taxonomy.display_name == taxonomy_name:
+                print(f"✅ Taxonomy '{taxonomy_name}' already exists: {taxonomy.name}")
+                return taxonomy.name
+        
+        # Create new taxonomy
+        taxonomy = datacatalog_v1.Taxonomy()
+        taxonomy.display_name = taxonomy_name
+        taxonomy.description = "Data classification taxonomy for policy tags"
+        
+        created_taxonomy = datacatalog_client.create_taxonomy(
+            parent=parent,
+            taxonomy=taxonomy
+        )
+        
+        print(f"✅ Created taxonomy '{taxonomy_name}': {created_taxonomy.name}")
+        return created_taxonomy.name
+        
+    except Exception as e:
+        print(f"❌ Could not create taxonomy: {str(e)}")
+        print(f"❌ Error type: {type(e).__name__}")
+        print(f"❌ Full error details: {e}")
+        print(f"❌ This might be due to missing Data Catalog API permissions or API not enabled")
+        raise e  # Re-raise the exception instead of returning None
+
+def create_policy_tag(taxonomy_name: str, tag_name: str, credentials) -> str:
+    """Create a policy tag within a taxonomy"""
+    try:
+        datacatalog_client = datacatalog_v1.PolicyTagManagerClient(credentials=credentials)
+        
+        # Check if policy tag already exists
+        policy_tags = datacatalog_client.list_policy_tags(parent=taxonomy_name)
+        
+        for tag in policy_tags:
+            if tag.display_name == tag_name:
+                print(f"✅ Policy tag '{tag_name}' already exists: {tag.name}")
+                return tag.name
+        
+        # Create new policy tag
+        policy_tag = datacatalog_v1.PolicyTag()
+        policy_tag.display_name = tag_name
+        policy_tag.description = f"Policy tag for {tag_name}"
+        
+        created_tag = datacatalog_client.create_policy_tag(
+            parent=taxonomy_name,
+            policy_tag=policy_tag
+        )
+        
+        print(f"✅ Created policy tag '{tag_name}': {created_tag.name}")
+        return created_tag.name
+        
+    except Exception as e:
+        print(f"❌ Could not create policy tag '{tag_name}': {str(e)}")
+        print(f"❌ Error type: {type(e).__name__}")
+        print(f"❌ Full error details: {e}")
+        raise e  # Re-raise the exception instead of returning None
+
+def delete_policy_tag(policy_tag_name: str, credentials) -> bool:
+    """Delete a policy tag"""
+    try:
+        datacatalog_client = datacatalog_v1.PolicyTagManagerClient(credentials=credentials)
+        
+        # Delete the policy tag
+        datacatalog_client.delete_policy_tag(name=policy_tag_name)
+        print(f"✅ Deleted policy tag: {policy_tag_name}")
+        return True
+        
+    except Exception as e:
+        print(f"⚠️ Could not delete policy tag '{policy_tag_name}': {str(e)}")
+        return False
+
+def get_policy_tag_by_name(taxonomy_name: str, tag_name: str, credentials) -> str:
+    """Get a policy tag by its display name"""
+    try:
+        datacatalog_client = datacatalog_v1.PolicyTagManagerClient(credentials=credentials)
+        
+        # List all policy tags in the taxonomy
+        policy_tags = datacatalog_client.list_policy_tags(parent=taxonomy_name)
+        
+        for tag in policy_tags:
+            if tag.display_name == tag_name:
+                return tag.name
+        
+        return None
+        
+    except Exception as e:
+        print(f"⚠️ Could not find policy tag '{tag_name}': {str(e)}")
+        return None
+
+def create_table_taxonomy(project_id: str, credentials, taxonomy_name: str = "TableClassification") -> str:
+    """Create a policy tag taxonomy for table-level classification"""
+    try:
+        datacatalog_client = datacatalog_v1.PolicyTagManagerClient(credentials=credentials)
+        
+        # Check if taxonomy already exists
+        parent = f"projects/{project_id}/locations/us"
+        taxonomies = datacatalog_client.list_taxonomies(parent=parent)
+        
+        for taxonomy in taxonomies:
+            if taxonomy.display_name == taxonomy_name:
+                print(f"✅ Table taxonomy '{taxonomy_name}' already exists: {taxonomy.name}")
+                return taxonomy.name
+        
+        # Create new taxonomy
+        taxonomy = datacatalog_v1.Taxonomy()
+        taxonomy.display_name = taxonomy_name
+        taxonomy.description = "Table-level classification taxonomy for policy tags"
+        
+        created_taxonomy = datacatalog_client.create_taxonomy(
+            parent=parent,
+            taxonomy=taxonomy
+        )
+        
+        print(f"✅ Created table taxonomy '{taxonomy_name}': {created_taxonomy.name}")
+        return created_taxonomy.name
+        
+    except Exception as e:
+        print(f"⚠️ Could not create table taxonomy: {str(e)}")
+        return None
 
 def is_pii_column(column: Dict) -> bool:
     """Detect if a column contains PII based on tags"""
@@ -84,8 +214,10 @@ def generate_masked_view_sql_bigquery(project_id: str, dataset_id: str, table_id
                     select_columns.append(f"CAST('***MASKED***' AS STRING) AS {field.name}")
                 elif field.field_type == 'INTEGER':
                     select_columns.append(f"CAST(NULL AS INTEGER) AS {field.name}")
+                elif field.field_type == 'FLOAT64':
+                    select_columns.append(f"CAST(NULL AS FLOAT64) AS {field.name}")
                 elif field.field_type == 'FLOAT':
-                    select_columns.append(f"CAST(NULL AS FLOAT) AS {field.name}")
+                    select_columns.append(f"CAST(NULL AS FLOAT64) AS {field.name}")
                 elif field.field_type in ['DATE', 'DATETIME', 'TIMESTAMP']:
                     select_columns.append(f"CAST(NULL AS {field.field_type}) AS {field.name}")
                 else:
@@ -120,6 +252,11 @@ class TableDetailsRequest(BaseModel):
     tableId: str
     connectorId: Optional[str] = None
 
+class TagInfo(BaseModel):
+    displayName: str
+    tagId: str
+    resourceName: str
+
 class ColumnInfo(BaseModel):
     name: str
     type: str
@@ -128,6 +265,7 @@ class ColumnInfo(BaseModel):
     piiFound: bool = False
     piiType: str = ""  # Type of PII detected (e.g., "Email", "SSN", "Credit Card")
     tags: List[str] = []
+    tagDetails: List[TagInfo] = []  # Detailed tag information for tooltips
 
 class TableDetailsResponse(BaseModel):
     tableName: str
@@ -146,6 +284,7 @@ class PublishTagsRequest(BaseModel):
     tableId: str
     columns: List[ColumnTag]
     tableTags: List[str] = []  # Table-level tags
+    connectorId: Optional[str] = None  # Connector ID for multi-connector support
 
 class PublishTagsResponse(BaseModel):
     success: bool
@@ -251,34 +390,66 @@ async def get_table_details(request: TableDetailsRequest):
             # NOTE: We are NOT parsing tags from descriptions anymore to avoid fake tags
             # Tags should only come from:
             # 1. BigQuery labels (table-level)
+            # 1. REAL BigQuery policy tags from table schema
             # 2. published_tags.json file (user-published tags)
             # We should NOT extract fake tags from descriptions like "[TAGS: identifier]"
             column_tags = []
             
-            # Try to extract tags and PII info from published_tags.json if available
-            try:
-                import os
-                tags_file = "published_tags.json"
-                if os.path.exists(tags_file):
-                    with open(tags_file, 'r') as f:
-                        published_tags = json.load(f)
+            # Get REAL policy tags from BigQuery schema ONLY (no cached tags)
+            tag_details = []
+            if field.policy_tags and len(field.policy_tags.names) > 0:
+                print(f"🔍 Column {field.name} has {len(field.policy_tags.names)} policy tags")
+                # Extract policy tag names from the resource names
+                for policy_tag_resource in field.policy_tags.names:
+                    print(f"🔍 Processing policy tag resource: {policy_tag_resource}")
                     
-                    table_key = f"{request.projectId}.{request.datasetId}.{request.tableId}"
-                    if table_key in published_tags:
-                        # Get tags and PII info for this specific column
-                        for col_data in published_tags[table_key].get("columns", []):
-                            if col_data.get("name") == field.name:
-                                # Append any published tags that aren't already in column_tags
-                                for tag in col_data.get("tags", []):
-                                    if tag not in column_tags:
-                                        column_tags.append(tag)
-                                # Override PII info if published
-                                if "piiFound" in col_data:
-                                    pii_found = col_data.get("piiFound", False)
-                                    pii_type = col_data.get("piiType", "")
-                                break
-            except Exception as e:
-                print(f"Warning: Could not load published tags: {e}")
+                    # Use Data Catalog API to get REAL policy tag names (no hardcoding!)
+                    tag_id = policy_tag_resource.split('/')[-1]
+                    
+                    try:
+                        from google.cloud import datacatalog_v1
+                        datacatalog_client = datacatalog_v1.PolicyTagManagerClient(credentials=credentials)
+                        policy_tag = datacatalog_client.get_policy_tag(name=policy_tag_resource)
+                        
+                        if policy_tag.display_name:
+                            display_name = policy_tag.display_name
+                            column_tags.append(display_name)
+                            tag_details.append(TagInfo(
+                                displayName=display_name,
+                                tagId=tag_id,
+                                resourceName=policy_tag_resource
+                            ))
+                            print(f"✅ Found REAL policy tag display name: {display_name}")
+                        else:
+                            # Policy tag exists but has no display name
+                            display_name = f"TAG_{tag_id}"
+                            column_tags.append(display_name)
+                            tag_details.append(TagInfo(
+                                displayName=display_name,
+                                tagId=tag_id,
+                                resourceName=policy_tag_resource
+                            ))
+                            print(f"⚠️ Policy tag has no display name, using fallback: {display_name}")
+                            
+                    except Exception as e:
+                        print(f"❌ Could not get policy tag display name for {policy_tag_resource}: {e}")
+                        # Create a more readable fallback name
+                        taxonomy_parts = policy_tag_resource.split('/')
+                        if len(taxonomy_parts) >= 6:
+                            taxonomy_name = taxonomy_parts[4]  # taxonomy_id
+                            display_name = f"TAG_{taxonomy_name}_{tag_id}"
+                        else:
+                            display_name = f"TAG_{tag_id}"
+                        column_tags.append(display_name)
+                        tag_details.append(TagInfo(
+                            displayName=display_name,
+                            tagId=tag_id,
+                            resourceName=policy_tag_resource
+                        ))
+                        print(f"🔄 Using fallback name: {display_name}")
+            
+            # NO CACHED TAGS - Only show REAL policy tags from BigQuery schema
+            print(f"🔍 Column {field.name}: Found {len(column_tags)} REAL policy tags: {column_tags}")
             
             column_info = ColumnInfo(
                 name=field.name,
@@ -287,25 +458,14 @@ async def get_table_details(request: TableDetailsRequest):
                 description=field.description or f"Column {field.name}",
                 piiFound=pii_found,
                 piiType=pii_type,
-                tags=column_tags
+                tags=column_tags,
+                tagDetails=tag_details
             )
             columns.append(column_info)
         
-        # Fetch table-level tags
+        # NO TABLE TAGS CACHE - Only show real table tags from BigQuery
         table_tags = []
-        try:
-            # Load published table tags if available
-            import os
-            tags_file = "published_tags.json"
-            if os.path.exists(tags_file):
-                with open(tags_file, 'r') as f:
-                    published_tags = json.load(f)
-                
-                table_key = f"{request.projectId}.{request.datasetId}.{request.tableId}"
-                if table_key in published_tags:
-                    table_tags = published_tags[table_key].get("tableTags", [])
-        except Exception as e:
-            print(f"Warning: Could not load table tags: {e}")
+        print(f"🔍 Table {request.tableId}: No cached table tags, showing empty array")
         
         return TableDetailsResponse(
             tableName=request.tableId,
@@ -330,62 +490,29 @@ async def get_table_details(request: TableDetailsRequest):
 @router.post("/publish-tags", response_model=PublishTagsResponse)
 async def publish_tags(request: PublishTagsRequest):
     try:
-        # Store tags in a local file for reference
-        import os
-        tags_file = "published_tags.json"
-        
-        # Load existing tags
-        existing_tags = {}
-        if os.path.exists(tags_file):
-            with open(tags_file, 'r') as f:
-                existing_tags = json.load(f)
-        
-        # Update with new tags
-        table_key = f"{request.projectId}.{request.datasetId}.{request.tableId}"
-        existing_tags[table_key] = {
-            "projectId": request.projectId,
-            "datasetId": request.datasetId,
-            "tableId": request.tableId,
-            "columns": [{"name": col.name, "tags": col.tags, "piiFound": col.piiFound, "piiType": col.piiType} for col in request.columns],
-            "tableTags": request.tableTags or [],  # Store table-level tags
-            "timestamp": time.strftime('%Y-%m-%d %H:%M:%S')
-        }
-        
-        # Save updated tags
-        with open(tags_file, 'w') as f:
-            json.dump(existing_tags, f, indent=2)
+        # NO CACHING - Only store real policy tags in BigQuery
+        print(f"🔍 No local caching - only storing real policy tags in BigQuery")
         
         # Generate SQL commands for BigQuery update
         sql_commands = []
         
-        # Generate ALTER TABLE commands for column descriptions
-        for column in request.columns:
-            if column.tags or column.piiFound:
-                # Build description with tags and PII info
-                desc_parts = []
-                if column.tags:
-                    desc_parts.append(f"Tags: {', '.join(column.tags)}")
-                if column.piiFound:
-                    pii_info = f"PII: {column.piiType}" if column.piiType else "PII: Yes"
-                    desc_parts.append(pii_info)
-                
-                desc_str = ' | '.join(desc_parts)
-                sql_commands.append(f"ALTER TABLE `{request.projectId}.{request.datasetId}.{request.tableId}`\nALTER COLUMN {column.name} SET OPTIONS (description = '{desc_str}');")
+        # NO SQL COMMANDS FOR DESCRIPTIONS - ONLY REAL POLICY TAGS
+        # SQL commands will be generated only if real policy tag creation fails
         
         # Generate ALTER TABLE command for table labels (from table-level tags)
         table_tags_list = request.tableTags or []
         
         if table_tags_list:
-            # Convert to BigQuery label format
+            # Convert to BigQuery policy tag label format
             label_pairs = []
             for i, tag in enumerate(table_tags_list[:64]):  # BigQuery limit
                 clean_tag = tag.lower().replace(' ', '_').replace(':', '_').replace('-', '_')
                 clean_tag = ''.join(c for c in clean_tag if c.isalnum() or c in '_-')
                 if clean_tag and len(clean_tag) <= 63:
-                    label_pairs.append(f"tag_{i} = '{clean_tag}'")
+                    label_pairs.append(f"policy_tag_{i} = '{clean_tag}'")
             
             if label_pairs:
-                # Create the SET OPTIONS command for labels
+                # Create the SET OPTIONS command for policy tag labels
                 sql_commands.insert(0, f"ALTER TABLE `{request.projectId}.{request.datasetId}.{request.tableId}`\nSET OPTIONS (\n  labels = [{', '.join(label_pairs)}]\n);")
         
         # Try to update BigQuery directly and capture the actual log message
@@ -400,7 +527,16 @@ async def publish_tags(request: PublishTagsRequest):
             active_connectors = main.active_connectors
             
             # Find the BigQuery connector
-            bigquery_connector = next((c for c in active_connectors if c["type"] == "BigQuery" and c["enabled"]), None)
+            if request.connectorId:
+                # Use specific connector if provided
+                bigquery_connector = next((c for c in active_connectors if c["id"] == request.connectorId), None)
+                print(f"DEBUG: Using specific connector ID: {request.connectorId}")
+                print(f"DEBUG: Found connector: {bigquery_connector['name'] if bigquery_connector else 'None'}")
+            else:
+                # Find any active BigQuery connector
+                bigquery_connector = next((c for c in active_connectors if c["type"] == "BigQuery" and c["enabled"]), None)
+                print(f"DEBUG: Using first available BigQuery connector")
+                print(f"DEBUG: Found connector: {bigquery_connector['name'] if bigquery_connector else 'None'}")
             
             if bigquery_connector:
                 # Try to get table info to check billing
@@ -409,7 +545,7 @@ async def publish_tags(request: PublishTagsRequest):
                         service_account_info = json.loads(bigquery_connector["service_account_json"])
                         credentials = service_account.Credentials.from_service_account_info(
                             service_account_info,
-                            scopes=["https://www.googleapis.com/auth/bigquery"]
+                            scopes=["https://www.googleapis.com/auth/bigquery", "https://www.googleapis.com/auth/cloud-platform"]
                         )
                         client = bigquery.Client(credentials=credentials, project=request.projectId)
                     except (json.JSONDecodeError, TypeError):
@@ -421,28 +557,164 @@ async def publish_tags(request: PublishTagsRequest):
                 table_ref = client.dataset(request.datasetId).table(request.tableId)
                 table = client.get_table(table_ref)
                 
-                # Apply table-level tags as BigQuery labels
+                # Apply table-level tags as BigQuery policy tags
                 if request.tableTags:
-                    # Create labels from table tags
-                    new_labels = {}
-                    for i, tag in enumerate(request.tableTags[:64]):  # BigQuery limit
-                        clean_tag = tag.lower().replace(' ', '_').replace(':', '_').replace('-', '_')
-                        clean_tag = ''.join(c for c in clean_tag if c.isalnum() or c in '_-')
-                        if clean_tag and len(clean_tag) <= 63:
-                            new_labels[f"tag_{i}"] = clean_tag
-                    
-                    # Merge with existing labels
-                    existing_labels = table.labels or {}
-                    existing_labels.update(new_labels)
-                    table.labels = existing_labels
-                    
-                    # Try to update the table with labels (this will fail if billing is not enabled)
-                    table = client.update_table(table, ["labels"])
+                    try:
+                        # Create table-level taxonomy
+                        table_taxonomy_name = create_table_taxonomy(request.projectId, credentials, "TableClassification")
+                        
+                        if table_taxonomy_name:
+                            # Create policy tags for table-level tags
+                            table_policy_tag_map = {}
+                            for tag in request.tableTags:
+                                policy_tag_name = create_policy_tag(table_taxonomy_name, tag, credentials)
+                                if policy_tag_name:
+                                    table_policy_tag_map[tag] = policy_tag_name
+                            
+                            # Apply table-level policy tags as labels (BigQuery doesn't have direct table policy tags)
+                            new_labels = {}
+                            for i, tag in enumerate(request.tableTags[:64]):  # BigQuery limit
+                                clean_tag = tag.lower().replace(' ', '_').replace(':', '_').replace('-', '_')
+                                clean_tag = ''.join(c for c in clean_tag if c.isalnum() or c in '_-')
+                                if clean_tag and len(clean_tag) <= 63:
+                                    new_labels[f"table_policy_tag_{i}"] = clean_tag
+                            
+                            # Merge with existing labels
+                            existing_labels = table.labels or {}
+                            existing_labels.update(new_labels)
+                            table.labels = existing_labels
+                            
+                            # Try to update the table with policy tags (this will fail if billing is not enabled)
+                            table = client.update_table(table, ["labels"])
+                            print(f"✅ Applied table-level policy tags: {request.tableTags}")
+                        else:
+                            print("⚠️ Could not create table taxonomy, using labels only")
+                            # Fallback to labels only
+                            new_labels = {}
+                            for i, tag in enumerate(request.tableTags[:64]):  # BigQuery limit
+                                clean_tag = tag.lower().replace(' ', '_').replace(':', '_').replace('-', '_')
+                                clean_tag = ''.join(c for c in clean_tag if c.isalnum() or c in '_-')
+                                if clean_tag and len(clean_tag) <= 63:
+                                    new_labels[f"table_policy_tag_{i}"] = clean_tag
+                            
+                            # Merge with existing labels
+                            existing_labels = table.labels or {}
+                            existing_labels.update(new_labels)
+                            table.labels = existing_labels
+                            
+                            # Try to update the table with policy tags (this will fail if billing is not enabled)
+                            table = client.update_table(table, ["labels"])
+                            
+                    except Exception as table_policy_error:
+                        print(f"⚠️ Could not apply table-level policy tags: {str(table_policy_error)}")
+                        # Fallback to simple labels
+                        new_labels = {}
+                        for i, tag in enumerate(request.tableTags[:64]):  # BigQuery limit
+                            clean_tag = tag.lower().replace(' ', '_').replace(':', '_').replace('-', '_')
+                            clean_tag = ''.join(c for c in clean_tag if c.isalnum() or c in '_-')
+                            if clean_tag and len(clean_tag) <= 63:
+                                new_labels[f"table_policy_tag_{i}"] = clean_tag
+                        
+                        # Merge with existing labels
+                        existing_labels = table.labels or {}
+                        existing_labels.update(new_labels)
+                        table.labels = existing_labels
+                        
+                        # Try to update the table with policy tags (this will fail if billing is not enabled)
+                        table = client.update_table(table, ["labels"])
                 
-                # If we get here, it was successful
-                success = True
-                billing_message = f"✅ BigQuery Update Successful: Table {request.projectId}.{request.datasetId}.{request.tableId} updated successfully with tags."
-                print(f"Publish tags success: Table {request.projectId}.{request.datasetId}.{request.tableId} updated successfully")
+                # Apply policy tags to columns - SIMPLIFIED APPROACH
+                # Since Data Catalog API is complex, let's use a direct approach
+                for column in request.columns:
+                    if column.tags:
+                        # Build description with policy tags
+                        desc_parts = []
+                        if column.tags:
+                            desc_parts.append(f"Policy Tags: {', '.join(column.tags)}")
+                        if column.piiFound:
+                            pii_info = f"PII: {column.piiType}" if column.piiType else "PII: Yes"
+                            desc_parts.append(pii_info)
+                        
+                        desc_str = ' | '.join(desc_parts)
+                        
+                        # CREATE AND APPLY REAL POLICY TAGS ONLY - NO FALLBACKS
+                        print(f"🔧 Creating REAL policy tags for column {column.name} with tags: {column.tags}")
+                        
+                        # Step 1: Create or get taxonomy
+                        try:
+                            taxonomy_name = create_policy_tag_taxonomy(request.projectId, credentials)
+                            
+                            if not taxonomy_name:
+                                raise Exception(f"❌ FAILED: Could not create taxonomy for project {request.projectId}")
+                            
+                            print(f"✅ Using taxonomy: {taxonomy_name}")
+                            
+                            # Step 2: Create policy tags for each tag
+                            policy_tag_map = {}
+                            for tag in column.tags:
+                                print(f"🔧 Creating policy tag: {tag}")
+                                policy_tag_name = create_policy_tag(taxonomy_name, tag, credentials)
+                                if policy_tag_name:
+                                    policy_tag_map[tag] = policy_tag_name
+                                    print(f"✅ Created policy tag '{tag}': {policy_tag_name}")
+                                else:
+                                    raise Exception(f"❌ FAILED: Could not create policy tag '{tag}'")
+                            
+                            # Step 3: Apply policy tags to column
+                            if not policy_tag_map:
+                                raise Exception(f"❌ FAILED: No policy tags were created for column {column.name}")
+                            
+                            # Use the first policy tag for simplicity (BigQuery allows only one policy tag per column)
+                            first_tag = list(policy_tag_map.keys())[0]
+                            policy_tag_resource = policy_tag_map[first_tag]
+                            
+                            # Step 3: Apply policy tags to column using BigQuery API (not SQL)
+                            print(f"🔧 Applying policy tag '{first_tag}' to column {column.name}")
+                            
+                            # Get the table to update its schema
+                            table_ref = client.dataset(request.datasetId).table(request.tableId)
+                            table = client.get_table(table_ref)
+                            
+                            # Find the column and update its policy tags
+                            updated_fields = []
+                            for field in table.schema:
+                                if field.name == column.name:
+                                    # Create a new field with policy tags
+                                    new_field = bigquery.SchemaField(
+                                        name=field.name,
+                                        field_type=field.field_type,
+                                        mode=field.mode,
+                                        description=field.description,
+                                        policy_tags=bigquery.PolicyTagList(names=[policy_tag_resource])
+                                    )
+                                    updated_fields.append(new_field)
+                                else:
+                                    updated_fields.append(field)
+                            
+                            # Update the table schema
+                            table.schema = updated_fields
+                            table = client.update_table(table, ["schema"])
+                            print(f"✅ SUCCESS! Applied REAL policy tag '{first_tag}' to column {column.name}")
+                            
+                            # Update success message
+                            billing_message = f"✅ BigQuery Policy Tags Update Successful: Table {request.projectId}.{request.datasetId}.{request.tableId} updated successfully with REAL policy tags!"
+                            billing_message += f"\n\n🎯 REAL POLICY TAGS APPLIED:"
+                            billing_message += f"\n• Column {column.name}: {first_tag}"
+                            billing_message += f"\n• Policy Tag Resource: {policy_tag_resource}"
+                            billing_message += f"\n• Check BigQuery UI 'Policy tags' column to see the tags!"
+                            
+                            # If we get here, the policy tag was applied successfully
+                            success = True
+                            
+                        except Exception as policy_tag_error:
+                            print(f"❌ POLICY TAG CREATION FAILED: {policy_tag_error}")
+                            raise Exception(f"❌ FAILED to create real policy tags: {policy_tag_error}")
+                
+                # Verify success flag was set by successful policy tag application
+                if not success:
+                    raise Exception(f"❌ FAILED: Policy tags were not applied to any columns")
+                
+                print(f"Publish policy tags success: Table {request.projectId}.{request.datasetId}.{request.tableId} updated successfully")
                 
                 # Generate and create masked view for PII columns
                 masked_view_sql = generate_masked_view_sql_bigquery(
@@ -499,10 +771,40 @@ class DeleteTagsRequest(BaseModel):
     tableId: str
     columnName: str
     tagToDelete: str
+    connectorId: Optional[str] = None  # Connector ID for multi-connector support
 
 class AllTagsResponse(BaseModel):
     tags: List[str]
     totalCount: int
+
+class TaxonomyRequest(BaseModel):
+    projectId: str
+    taxonomyName: str
+    description: str = ""
+    connectorId: Optional[str] = None
+
+class PolicyTagRequest(BaseModel):
+    projectId: str
+    taxonomyName: str
+    tagName: str
+    description: str = ""
+    connectorId: Optional[str] = None
+
+class DeletePolicyTagRequest(BaseModel):
+    projectId: str
+    taxonomyName: str
+    tagName: str
+    connectorId: Optional[str] = None
+
+class TaxonomyResponse(BaseModel):
+    success: bool
+    message: str
+    taxonomyName: Optional[str] = None
+
+class PolicyTagResponse(BaseModel):
+    success: bool
+    message: str
+    policyTagName: Optional[str] = None
 
 @router.get("/all-tags", response_model=AllTagsResponse)
 async def get_all_tags():
@@ -571,27 +873,8 @@ async def get_all_tags():
             except Exception as bigquery_error:
                 print(f"⚠️ Could not fetch tags from BigQuery: {bigquery_error}")
         
-        # Also fetch tags from published_tags.json (user-published tags)
-        try:
-            import os
-            tags_file = "published_tags.json"
-            if os.path.exists(tags_file):
-                with open(tags_file, 'r') as f:
-                    published_tags = json.load(f)
-                
-                # Extract all tags from all tables
-                for table_key, table_data in published_tags.items():
-                    # Add table-level tags
-                    for tag in table_data.get("tableTags", []):
-                        all_tags.add(tag)
-                    # Add column-level tags
-                    for col in table_data.get("columns", []):
-                        for tag in col.get("tags", []):
-                            all_tags.add(tag)
-                
-                print(f"✅ Fetched additional {len([t for t in all_tags])} tags from published_tags.json")
-        except Exception as published_tags_error:
-            print(f"⚠️ Could not load published tags: {published_tags_error}")
+        # NO CACHING - Only fetch real tags from BigQuery
+        print(f"🔍 No cached tags - only fetching real tags from BigQuery")
         
         tags_list = sorted(list(all_tags))
         
@@ -608,34 +891,121 @@ async def get_all_tags():
 @router.post("/delete-tags", response_model=PublishTagsResponse)
 async def delete_tags(request: DeleteTagsRequest):
     try:
-        # Load existing tags
-        import os
-        tags_file = "published_tags.json"
-        existing_tags = {}
-        if os.path.exists(tags_file):
-            with open(tags_file, 'r') as f:
-                existing_tags = json.load(f)
+        # NO CACHING - Only work with real policy tags in BigQuery
+        print(f"🔍 No local caching - only working with real policy tags in BigQuery")
         
-        # Update tags by removing the specified tag
-        table_key = f"{request.projectId}.{request.datasetId}.{request.tableId}"
-        
-        if table_key in existing_tags:
-            # Update the specific column's tags
-            for col_data in existing_tags[table_key].get("columns", []):
-                if col_data.get("name") == request.columnName:
-                    # Remove the tag if it exists
-                    if "tags" in col_data:
-                        tags_list = col_data["tags"]
-                        if request.tagToDelete in tags_list:
-                            tags_list.remove(request.tagToDelete)
-                    break
+        # Try to remove policy tag from BigQuery column
+        try:
+            # Import the global variables from main.py
+            import main
+            active_connectors = main.active_connectors
             
-            # Save updated tags
-            with open(tags_file, 'w') as f:
-                json.dump(existing_tags, f, indent=2)
-        else:
-            # If table doesn't exist in published tags, return success (nothing to delete)
-            pass
+            # Find the BigQuery connector
+            if request.connectorId:
+                bigquery_connector = next((c for c in active_connectors if c["id"] == request.connectorId), None)
+            else:
+                bigquery_connector = next((c for c in active_connectors if c["type"] == "BigQuery" and c["enabled"]), None)
+            
+            if bigquery_connector and "service_account_json" in bigquery_connector:
+                # Get credentials
+                service_account_info = json.loads(bigquery_connector["service_account_json"])
+                credentials = service_account.Credentials.from_service_account_info(
+                    service_account_info,
+                    scopes=["https://www.googleapis.com/auth/bigquery", "https://www.googleapis.com/auth/cloud-platform"]
+                )
+                client = bigquery.Client(credentials=credentials, project=request.projectId)
+                
+                # Try to remove policy tag from column
+                try:
+                    # Get the taxonomy for column-level tags
+                    taxonomy_name = create_policy_tag_taxonomy(request.projectId, credentials, "DataClassification")
+                    
+                    if taxonomy_name:
+                        # Find the policy tag by name
+                        policy_tag_name = get_policy_tag_by_name(taxonomy_name, request.tagToDelete, credentials)
+                        
+                        if policy_tag_name:
+                            # Remove policy tag from column using BigQuery API (not SQL)
+                            print(f"🔧 Removing policy tag '{request.tagToDelete}' from column {request.columnName}")
+                            
+                            # Get the table to update its schema
+                            table_ref = client.dataset(request.datasetId).table(request.tableId)
+                            table = client.get_table(table_ref)
+                            
+                            # Find the column and remove its policy tags
+                            updated_fields = []
+                            for field in table.schema:
+                                if field.name == request.columnName:
+                                    # Create a new field without policy tags
+                                    new_field = bigquery.SchemaField(
+                                        name=field.name,
+                                        field_type=field.field_type,
+                                        mode=field.mode,
+                                        description=field.description,
+                                        policy_tags=None  # Remove policy tags
+                                    )
+                                    updated_fields.append(new_field)
+                                else:
+                                    updated_fields.append(field)
+                            
+                            # Update the table schema
+                            table.schema = updated_fields
+                            table = client.update_table(table, ["schema"])
+                            print(f"✅ Removed policy tag '{request.tagToDelete}' from column {request.columnName}")
+                        else:
+                            print(f"⚠️ Policy tag '{request.tagToDelete}' not found in taxonomy")
+                    else:
+                        print("⚠️ Could not access taxonomy for policy tag removal")
+                        
+                except Exception as policy_error:
+                    print(f"⚠️ Could not remove policy tag from BigQuery: {str(policy_error)}")
+                    
+                    # Fallback: Update column description to remove the tag
+                    try:
+                        # Get current table to check column description
+                        table_ref = client.dataset(request.datasetId).table(request.tableId)
+                        table = client.get_table(table_ref)
+                        
+                        # Find the column and update its description
+                        for field in table.schema:
+                            if field.name == request.columnName:
+                                current_desc = field.description or ""
+                                
+                                # Remove the tag from description
+                                if f"Policy Tags: {request.tagToDelete}" in current_desc:
+                                    new_desc = current_desc.replace(f"Policy Tags: {request.tagToDelete}", "").replace("Policy Tags: , ", "Policy Tags: ").replace("Policy Tags: ", "").strip()
+                                    if new_desc.startswith("|"):
+                                        new_desc = new_desc[1:].strip()
+                                    if new_desc.endswith("|"):
+                                        new_desc = new_desc[:-1].strip()
+                                else:
+                                    # Handle case where tag is part of a comma-separated list
+                                    import re
+                                    pattern = rf"Policy Tags: ([^|]*{re.escape(request.tagToDelete)}[^|]*)"
+                                    match = re.search(pattern, current_desc)
+                                    if match:
+                                        tags_part = match.group(1)
+                                        tags_list = [tag.strip() for tag in tags_part.split(',')]
+                                        tags_list = [tag for tag in tags_list if tag != request.tagToDelete]
+                                        if tags_list:
+                                            new_desc = current_desc.replace(match.group(0), f"Policy Tags: {', '.join(tags_list)}")
+                                        else:
+                                            new_desc = current_desc.replace(match.group(0), "")
+                                    else:
+                                        new_desc = current_desc
+                                
+                                # Update column description
+                                alter_sql = f"ALTER TABLE `{request.projectId}.{request.datasetId}.{request.tableId}` ALTER COLUMN {request.columnName} SET OPTIONS (description = '{new_desc}')"
+                                query_job = client.query(alter_sql)
+                                query_job.result()
+                                print(f"✅ Fallback: Updated column {request.columnName} description to remove tag")
+                                break
+                                
+                    except Exception as desc_error:
+                        print(f"⚠️ Could not update column description: {str(desc_error)}")
+                        
+        except Exception as bigquery_error:
+            print(f"⚠️ Could not access BigQuery for tag deletion: {str(bigquery_error)}")
         
         return PublishTagsResponse(
             success=True,
@@ -650,4 +1020,193 @@ async def delete_tags(request: DeleteTagsRequest):
         raise HTTPException(
             status_code=500, 
             detail=f"Failed to delete tag: {str(e)}"
+        )
+
+@router.post("/create-taxonomy", response_model=TaxonomyResponse)
+async def create_taxonomy_endpoint(request: TaxonomyRequest):
+    """Create a new policy tag taxonomy"""
+    try:
+        # Import the global variables from main.py
+        import main
+        active_connectors = main.active_connectors
+        
+        # Find the BigQuery connector
+        if request.connectorId:
+            bigquery_connector = next((c for c in active_connectors if c["id"] == request.connectorId), None)
+        else:
+            bigquery_connector = next((c for c in active_connectors if c["type"] == "BigQuery" and c["enabled"]), None)
+        
+        if not bigquery_connector:
+            raise HTTPException(
+                status_code=404,
+                detail="No active BigQuery connector found."
+            )
+        
+        # Get credentials
+        service_account_info = json.loads(bigquery_connector["service_account_json"])
+        credentials = service_account.Credentials.from_service_account_info(
+            service_account_info,
+            scopes=["https://www.googleapis.com/auth/cloud-platform"]
+        )
+        
+        # Create taxonomy
+        taxonomy_name = create_policy_tag_taxonomy(request.projectId, credentials, request.taxonomyName)
+        
+        if taxonomy_name:
+            return TaxonomyResponse(
+                success=True,
+                message=f"✅ Taxonomy '{request.taxonomyName}' created successfully",
+                taxonomyName=taxonomy_name
+            )
+        else:
+            return TaxonomyResponse(
+                success=False,
+                message=f"❌ Failed to create taxonomy '{request.taxonomyName}'"
+            )
+            
+    except Exception as e:
+        print(f"Create taxonomy error: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to create taxonomy: {str(e)}"
+        )
+
+@router.post("/create-policy-tag", response_model=PolicyTagResponse)
+async def create_policy_tag_endpoint(request: PolicyTagRequest):
+    """Create a new policy tag within a taxonomy"""
+    try:
+        # Import the global variables from main.py
+        import main
+        active_connectors = main.active_connectors
+        
+        # Find the BigQuery connector
+        if request.connectorId:
+            bigquery_connector = next((c for c in active_connectors if c["id"] == request.connectorId), None)
+        else:
+            bigquery_connector = next((c for c in active_connectors if c["type"] == "BigQuery" and c["enabled"]), None)
+        
+        if not bigquery_connector:
+            raise HTTPException(
+                status_code=404,
+                detail="No active BigQuery connector found."
+            )
+        
+        # Get credentials
+        service_account_info = json.loads(bigquery_connector["service_account_json"])
+        credentials = service_account.Credentials.from_service_account_info(
+            service_account_info,
+            scopes=["https://www.googleapis.com/auth/cloud-platform"]
+        )
+        
+        # Find taxonomy by name
+        datacatalog_client = datacatalog_v1.PolicyTagManagerClient(credentials=credentials)
+        parent = f"projects/{request.projectId}/locations/us"
+        taxonomies = datacatalog_client.list_taxonomies(parent=parent)
+        
+        taxonomy_name = None
+        for taxonomy in taxonomies:
+            if taxonomy.display_name == request.taxonomyName:
+                taxonomy_name = taxonomy.name
+                break
+        
+        if not taxonomy_name:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Taxonomy '{request.taxonomyName}' not found"
+            )
+        
+        # Create policy tag
+        policy_tag_name = create_policy_tag(taxonomy_name, request.tagName, credentials)
+        
+        if policy_tag_name:
+            return PolicyTagResponse(
+                success=True,
+                message=f"✅ Policy tag '{request.tagName}' created successfully in taxonomy '{request.taxonomyName}'",
+                policyTagName=policy_tag_name
+            )
+        else:
+            return PolicyTagResponse(
+                success=False,
+                message=f"❌ Failed to create policy tag '{request.tagName}'"
+            )
+            
+    except Exception as e:
+        print(f"Create policy tag error: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to create policy tag: {str(e)}"
+        )
+
+@router.post("/delete-policy-tag", response_model=PolicyTagResponse)
+async def delete_policy_tag_endpoint(request: DeletePolicyTagRequest):
+    """Delete a policy tag from a taxonomy"""
+    try:
+        # Import the global variables from main.py
+        import main
+        active_connectors = main.active_connectors
+        
+        # Find the BigQuery connector
+        if request.connectorId:
+            bigquery_connector = next((c for c in active_connectors if c["id"] == request.connectorId), None)
+        else:
+            bigquery_connector = next((c for c in active_connectors if c["type"] == "BigQuery" and c["enabled"]), None)
+        
+        if not bigquery_connector:
+            raise HTTPException(
+                status_code=404,
+                detail="No active BigQuery connector found."
+            )
+        
+        # Get credentials
+        service_account_info = json.loads(bigquery_connector["service_account_json"])
+        credentials = service_account.Credentials.from_service_account_info(
+            service_account_info,
+            scopes=["https://www.googleapis.com/auth/cloud-platform"]
+        )
+        
+        # Find taxonomy by name
+        datacatalog_client = datacatalog_v1.PolicyTagManagerClient(credentials=credentials)
+        parent = f"projects/{request.projectId}/locations/us"
+        taxonomies = datacatalog_client.list_taxonomies(parent=parent)
+        
+        taxonomy_name = None
+        for taxonomy in taxonomies:
+            if taxonomy.display_name == request.taxonomyName:
+                taxonomy_name = taxonomy.name
+                break
+        
+        if not taxonomy_name:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Taxonomy '{request.taxonomyName}' not found"
+            )
+        
+        # Find policy tag by name
+        policy_tag_name = get_policy_tag_by_name(taxonomy_name, request.tagName, credentials)
+        
+        if not policy_tag_name:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Policy tag '{request.tagName}' not found in taxonomy '{request.taxonomyName}'"
+            )
+        
+        # Delete policy tag
+        success = delete_policy_tag(policy_tag_name, credentials)
+        
+        if success:
+            return PolicyTagResponse(
+                success=True,
+                message=f"✅ Policy tag '{request.tagName}' deleted successfully from taxonomy '{request.taxonomyName}'"
+            )
+        else:
+            return PolicyTagResponse(
+                success=False,
+                message=f"❌ Failed to delete policy tag '{request.tagName}'"
+            )
+            
+    except Exception as e:
+        print(f"Delete policy tag error: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to delete policy tag: {str(e)}"
         )

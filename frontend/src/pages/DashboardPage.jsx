@@ -55,7 +55,7 @@ const DashboardPage = () => {
         <RecentActivityPanel activities={activities} />
       </Box>
       <Box sx={{ display: 'flex', gridColumn: '1 / -1' }}>
-        <DiscoveryStatisticsPanel stats={[]} />
+        <DiscoveryStatisticsPanel stats={stats} />
       </Box>
     </Box>
   );

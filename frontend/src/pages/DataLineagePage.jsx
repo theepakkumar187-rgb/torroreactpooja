@@ -635,9 +635,19 @@ const DataLineagePage = () => {
     return sourceExists && targetExists;
   });
 
-  // Get unique types and sources for filters
-  const uniqueTypes = [...new Set(nodes.map(n => n.data.type))];
-  const uniqueSources = [...new Set(nodes.map(n => n.data.source_system))];
+  // Get unique types and sources for filters from full data
+  const uniqueTypes = [...new Set(fullLineageData.rawData?.nodes?.map(n => n.type) || [])];
+  const uniqueSources = [...new Set(fullLineageData.rawData?.nodes?.map(n => n.source_system) || [])];
+
+  // Create filtered raw data for dropdown (applies search, type, and source filters)
+  const filteredRawNodes = fullLineageData.rawData?.nodes?.filter(node => {
+    const matchesSearch = !searchTerm || 
+      node.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      node.catalog.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesType = filterType === 'all' || node.type === filterType;
+    const matchesSource = filterSource === 'all' || node.source_system === filterSource;
+    return matchesSearch && matchesType && matchesSource;
+  }) || [];
 
   return (
     <Box sx={{ minHeight: '120vh', p: 4, pb: 8 }}>
@@ -670,22 +680,22 @@ const DataLineagePage = () => {
           <Grid container spacing={2} alignItems="center">
             <Grid item xs={12} md={5}>
               <Autocomplete
-                options={fullLineageData.rawData?.nodes ? fullLineageData.rawData.nodes.map(n => ({
+                options={filteredRawNodes.map(n => ({
                   id: n.id,
                   label: `${n.name} (${n.type})`,
                   name: n.name,
                   type: n.type,
                   source: n.source_system,
-                })) : []}
-                value={fullLineageData.rawData?.nodes?.find(n => n.id === selectedAssetForLineage) ? {
+                }))}
+                value={filteredRawNodes.find(n => n.id === selectedAssetForLineage) ? {
                   id: selectedAssetForLineage,
-                  label: fullLineageData.rawData.nodes.find(n => n.id === selectedAssetForLineage)?.name,
+                  label: filteredRawNodes.find(n => n.id === selectedAssetForLineage)?.name,
                 } : null}
                 onChange={(event, newValue) => {
                   handleAssetSelection(newValue ? newValue.id : null);
                   handleAssetDetailsSelection(newValue ? newValue.id : null);
                 }}
-                disabled={!fullLineageData.rawData?.nodes || fullLineageData.rawData.nodes.length === 0}
+                disabled={!filteredRawNodes || filteredRawNodes.length === 0}
                 renderInput={(params) => (
                   <TextField
                     {...params}
@@ -819,7 +829,10 @@ const DataLineagePage = () => {
                 Select an Asset to View Lineage
               </Typography>
               <Typography variant="body2">
-                Use the dropdown above to select an asset and see its data lineage:
+                Use the dropdown above to select a data asset (Table or View) and see its data lineage:
+              </Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1, fontStyle: 'italic' }}>
+                Note: Lineage shows only Tables and Views (data containers). Catalogs and Schemas are organizational structures and don't participate in data flow.
               </Typography>
               <ul style={{ marginTop: 12, marginBottom: 0 }}>
                 <li><strong>Upstream:</strong> Where this data comes from</li>
@@ -828,9 +841,10 @@ const DataLineagePage = () => {
               </ul>
               <Box sx={{ mt: 3, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                 <Chip 
-                  label={`${fullLineageData.rawData?.nodes?.length || 0} Total Assets`} 
+                  label={`${fullLineageData.rawData?.nodes?.length || 0} Data Assets`} 
                   color="primary" 
                   size="small"
+                  title="Tables and Views that can have lineage relationships"
                 />
                 <Chip 
                   label={`${columnRelationships} Column Links`} 
@@ -1016,7 +1030,7 @@ const DataLineagePage = () => {
                     sx={{ height: 32, fontSize: 13, borderColor: '#ccc', color: '#666', fontWeight: 500 }}
                   />
                   <Chip 
-                    label={selectedAssetDetails.source_system} 
+                    label={selectedAssetDetails.source_system || selectedAssetDetails.technical_metadata?.source_system || selectedAssetDetails.connector_id || 'Unknown'} 
                     size="medium" 
                     variant="outlined"
                     sx={{ height: 32, fontSize: 13, borderColor: '#ccc', color: '#666', fontWeight: 500 }}
@@ -1232,7 +1246,7 @@ const DataLineagePage = () => {
                             Source System
                           </Typography>
                           <Typography variant="body2" sx={{ fontSize: 12, color: '#333' }}>
-                            {selectedAssetDetails.source_system || selectedAssetDetails.connector_id || 'Unknown'}
+                            {selectedAssetDetails.source_system || selectedAssetDetails.technical_metadata?.source_system || selectedAssetDetails.connector_id || 'Unknown'}
                           </Typography>
                         </Box>
                         <Box>
@@ -1307,7 +1321,7 @@ const DataLineagePage = () => {
                           Database
                         </Typography>
                         <Typography variant="body2" sx={{ fontSize: 12, color: '#333' }}>
-                          {selectedAssetDetails.database || selectedAssetDetails.source_system || 'N/A'}
+                          {selectedAssetDetails.database || selectedAssetDetails.source_system || selectedAssetDetails.technical_metadata?.source_system || 'N/A'}
                         </Typography>
                       </Box>
                     </Grid>
@@ -1631,10 +1645,28 @@ const DataLineagePage = () => {
               <Button onClick={handleCloseDialog}>Close</Button>
               <Button 
                 variant="contained" 
-                onClick={() => {
-                  setSelectedAssetDetails(selectedNode);
-                  setActiveDetailTab('basic');
-                  handleCloseDialog();
+                onClick={async () => {
+                  try {
+                    // Fetch full asset details from API
+                    const response = await fetch(`http://localhost:8000/api/assets/${encodeURIComponent(selectedNode.id)}`);
+                    if (response.ok) {
+                      const data = await response.json();
+                      setSelectedAssetDetails(data);
+                      setActiveDetailTab('basic');
+                      handleCloseDialog();
+                    } else {
+                      // Fallback to selectedNode if API fails
+                      setSelectedAssetDetails(selectedNode);
+                      setActiveDetailTab('basic');
+                      handleCloseDialog();
+                    }
+                  } catch (error) {
+                    console.error('Error fetching full asset details:', error);
+                    // Fallback to selectedNode if API fails
+                    setSelectedAssetDetails(selectedNode);
+                    setActiveDetailTab('basic');
+                    handleCloseDialog();
+                  }
                 }}
               >
                 View Full Details

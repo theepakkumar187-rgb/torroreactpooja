@@ -286,59 +286,66 @@ def lookup_catalog_schema_table_ids(account_domain: str, access_token: str, cata
         'Content-Type': 'application/json'
     }
     
-    # Get catalog ID
-    catalogs_url = f"{base_url}/public/api/v1/catalog"
-    catalogs_response = requests.get(catalogs_url, headers=headers, timeout=30)
-    if catalogs_response.status_code == 200:
-        catalogs = catalogs_response.json().get('result', [])
-        print(f"DEBUG: Looking for catalog '{catalog_name}' in {len(catalogs)} catalogs")
-        for catalog in catalogs:
-            # Try different field names
-            catalog_id = catalog.get('catalogId') or catalog.get('id') or catalog.get('name')
-            catalog_name_from_api = catalog.get('catalogName') or catalog.get('name')
-            
-            print(f"DEBUG: Checking catalog: {catalog_name_from_api}")
-            if catalog_name_from_api == catalog_name:
-                print(f"DEBUG: ✅ Found catalog ID: {catalog_id}")
+    try:
+        # Get catalog ID
+        catalogs_url = f"{base_url}/public/api/v1/catalog"
+        print(f"🔍 Looking up catalog '{catalog_name}'...")
+        catalogs_response = requests.get(catalogs_url, headers=headers, timeout=15)
+        if catalogs_response.status_code == 200:
+            catalogs = catalogs_response.json().get('result', [])
+            print(f"   Found {len(catalogs)} catalogs to search")
+            for catalog in catalogs:
+                # Try different field names
+                catalog_id = catalog.get('catalogId') or catalog.get('id') or catalog.get('name')
+                catalog_name_from_api = catalog.get('catalogName') or catalog.get('name')
                 
-                # Get schema ID
-                schemas_url = f"{base_url}/public/api/v1/catalog/{catalog_id}/schema"
-                schemas_response = requests.get(schemas_url, headers=headers, timeout=30)
-                print(f"DEBUG: Schemas response status: {schemas_response.status_code}")
-                if schemas_response.status_code == 200:
-                    schemas = schemas_response.json().get('result', [])
-                    print(f"DEBUG: Found {len(schemas)} schemas, looking for '{schema_name}'")
-                    if schemas:
-                        print(f"DEBUG: First schema structure: {schemas[0]}")
-                    for schema in schemas:
-                        # Try different field names for schema
-                        schema_id_from_api = schema.get('schemaId') or schema.get('id') or schema.get('name')
-                        print(f"DEBUG: Checking schema: {schema_id_from_api}")
-                        
-                        # In Starburst, schemaId might BE the schema name, not a UUID!
-                        if schema_id_from_api == schema_name:
-                            print(f"DEBUG: ✅ Found schema ID: {schema_id_from_api}")
+                if catalog_name_from_api == catalog_name:
+                    print(f"✅ Found catalog: {catalog_name} (ID: {catalog_id})")
+                    
+                    # Get schema ID
+                    print(f"🔍 Looking up schema '{schema_name}'...")
+                    schemas_url = f"{base_url}/public/api/v1/catalog/{catalog_id}/schema"
+                    schemas_response = requests.get(schemas_url, headers=headers, timeout=15)
+                    if schemas_response.status_code == 200:
+                        schemas = schemas_response.json().get('result', [])
+                        print(f"   Found {len(schemas)} schemas to search")
+                        for schema in schemas:
+                            # Try different field names for schema
+                            schema_id_from_api = schema.get('schemaId') or schema.get('id') or schema.get('name')
                             
-                            # Get table ID
-                            tables_url = f"{base_url}/public/api/v1/catalog/{catalog_id}/schema/{schema_id_from_api}/table"
-                            tables_response = requests.get(tables_url, headers=headers, timeout=30)
-                            print(f"DEBUG: Tables response status: {tables_response.status_code}")
-                            if tables_response.status_code == 200:
-                                tables = tables_response.json().get('result', [])
-                                print(f"DEBUG: Found {len(tables)} tables, looking for '{table_name}'")
-                                for table in tables:
-                                    # Try different field names for table
-                                    table_id_from_api = table.get('tableId') or table.get('id') or table.get('name')
-                                    print(f"DEBUG: Checking table: {table_id_from_api}")
-                                    if table_id_from_api == table_name:
-                                        print(f"DEBUG: ✅ Found table ID: {table_id_from_api}")
-                                        return (catalog_id, schema_id_from_api, table_id_from_api)
-                                print(f"DEBUG: Table '{table_name}' not found. Available: {[t.get('tableId') or t.get('name') for t in tables[:5]]}")
-                            else:
-                                print(f"DEBUG: Failed to get tables: {tables_response.text[:200]}")
-                    print(f"DEBUG: Schema '{schema_name}' not found. Available: {[s.get('schemaId') or s.get('name') for s in schemas[:5]]}")
-                else:
-                    print(f"DEBUG: Failed to get schemas: {schemas_response.text[:200]}")
+                            # In Starburst, schemaId might BE the schema name, not a UUID!
+                            if schema_id_from_api == schema_name:
+                                print(f"✅ Found schema: {schema_name} (ID: {schema_id_from_api})")
+                                
+                                # Get table ID
+                                print(f"🔍 Looking up table '{table_name}'...")
+                                tables_url = f"{base_url}/public/api/v1/catalog/{catalog_id}/schema/{schema_id_from_api}/table"
+                                tables_response = requests.get(tables_url, headers=headers, timeout=15)
+                                if tables_response.status_code == 200:
+                                    tables = tables_response.json().get('result', [])
+                                    print(f"   Found {len(tables)} tables to search")
+                                    for table in tables:
+                                        # Try different field names for table
+                                        table_id_from_api = table.get('tableId') or table.get('id') or table.get('name')
+                                        if table_id_from_api == table_name:
+                                            print(f"✅ Found table: {table_name} (ID: {table_id_from_api})")
+                                            return (catalog_id, schema_id_from_api, table_id_from_api)
+                                    print(f"❌ Table '{table_name}' not found in schema '{schema_name}'")
+                                    print(f"   Available tables: {[t.get('tableId') or t.get('name') for t in tables[:10]]}")
+                                else:
+                                    print(f"❌ Failed to get tables: HTTP {tables_response.status_code}")
+                        print(f"❌ Schema '{schema_name}' not found in catalog '{catalog_name}'")
+                        print(f"   Available schemas: {[s.get('schemaId') or s.get('name') for s in schemas[:10]]}")
+                    else:
+                        print(f"❌ Failed to get schemas: HTTP {schemas_response.status_code}")
+        else:
+            print(f"❌ Failed to get catalogs: HTTP {catalogs_response.status_code}")
+    except requests.exceptions.Timeout:
+        print(f"❌ Timeout while looking up {catalog_name}.{schema_name}.{table_name}")
+        return (None, None, None)
+    except Exception as e:
+        print(f"❌ Error looking up {catalog_name}.{schema_name}.{table_name}: {str(e)}")
+        return (None, None, None)
     
     print(f"DEBUG: ❌ Failed to find catalog/schema/table: {catalog_name}.{schema_name}.{table_name}")
     return (None, None, None)
@@ -365,7 +372,7 @@ def get_or_create_tag(account_domain: str, access_token: str, tag_name: str, tag
     get_url = f"{base_url}/public/api/v1/tag/{encoded_tag_name}"
     
     print(f"DEBUG: Fetching tag: {get_url}")
-    get_response = requests.get(get_url, headers=headers, timeout=30)
+    get_response = requests.get(get_url, headers=headers, timeout=15)
     
     if get_response.status_code == 200:
         tag_data = get_response.json()
@@ -381,7 +388,7 @@ def get_or_create_tag(account_domain: str, access_token: str, tag_name: str, tag
         "description": f"Tag: {sanitized_tag_name} (original: {tag_name})"
     }
     
-    create_response = requests.post(create_url, headers=headers, json=create_payload, timeout=30)
+    create_response = requests.post(create_url, headers=headers, json=create_payload, timeout=15)
     if create_response.status_code not in [200, 201]:
         raise Exception(f"Failed to create tag: {create_response.status_code} - {create_response.text}")
     
@@ -948,7 +955,7 @@ async def publish_tags(request: PublishTagsRequest):
                 catalog_tag_url = f"{base_url}/public/api/v1/tag/{encoded_tag_id}/catalog/{encoded_catalog_id}"
                 print(f"DEBUG: Applying tag to catalog: {catalog_tag_url}")
                 
-                update_response = requests.put(catalog_tag_url, headers=headers, json={}, timeout=30)
+                update_response = requests.put(catalog_tag_url, headers=headers, json={}, timeout=15)
                 
                 if update_response.status_code in [200, 204]:
                     print(f"✅ Successfully applied tag '{sanitized_tag_name}' to catalog '{request.catalog}'")
@@ -981,7 +988,7 @@ async def publish_tags(request: PublishTagsRequest):
                 schema_tag_url = f"{base_url}/public/api/v1/tag/{encoded_tag_id}/catalog/{encoded_catalog_id}/schema/{encoded_schema_id}"
                 print(f"DEBUG: Applying tag to schema: {schema_tag_url}")
                 
-                update_response = requests.put(schema_tag_url, headers=headers, json={}, timeout=30)
+                update_response = requests.put(schema_tag_url, headers=headers, json={}, timeout=15)
                 
                 if update_response.status_code in [200, 204]:
                     print(f"✅ Successfully applied tag '{sanitized_tag_name}' to schema '{request.schema}'")
@@ -1015,7 +1022,7 @@ async def publish_tags(request: PublishTagsRequest):
                 table_tag_url = f"{base_url}/public/api/v1/tag/{encoded_tag_id}/catalog/{encoded_catalog_id}/schema/{encoded_schema_id}/table/{encoded_table_id}"
                 print(f"DEBUG: Applying tag to table: {table_tag_url}")
                 
-                update_response = requests.put(table_tag_url, headers=headers, json={}, timeout=30)
+                update_response = requests.put(table_tag_url, headers=headers, json={}, timeout=15)
                 
                 if update_response.status_code in [200, 204]:
                     print(f"✅ Successfully applied tag '{sanitized_tag_name}' to table '{request.tableId}'")
@@ -1062,7 +1069,7 @@ async def publish_tags(request: PublishTagsRequest):
                         
                         print(f"DEBUG: Applying tag to column: {update_url}")
                         
-                        update_response = requests.put(update_url, headers=headers, json={}, timeout=30)
+                        update_response = requests.put(update_url, headers=headers, json={}, timeout=15)
                         
                         if update_response.status_code in [200, 204]:
                             print(f"✅ Successfully applied tag '{sanitized_tag_name}' to column '{col_tag.columnName}'")

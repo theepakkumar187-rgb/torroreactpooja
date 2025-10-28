@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -39,6 +39,7 @@ import {
   Autocomplete,
   Menu,
   ListItemIcon,
+  Tooltip,
 } from '@mui/material';
 import {
   ArrowBack,
@@ -60,6 +61,10 @@ const MarketplacePage = () => {
   const [gcpProject, setGcpProject] = useState('');
   const [dataset, setDataset] = useState('');
   const [tableName, setTableName] = useState('');
+  
+  // Starburst-specific state variables
+  const [catalog, setCatalog] = useState('');
+  const [schema, setSchema] = useState('');
   const [loading, setLoading] = useState(false);
   const [tableData, setTableData] = useState(null);
   const [error, setError] = useState(null);
@@ -83,9 +88,42 @@ const MarketplacePage = () => {
   const [recommendedTagsDialogOpen, setRecommendedTagsDialogOpen] = useState(false);
   const [recommendedTags, setRecommendedTags] = useState({});
   const [existingTags, setExistingTags] = useState([]);
+  const [connectors, setConnectors] = useState([]);
   const [piiDialogOpen, setPiiDialogOpen] = useState(false);
   const [selectedColumnForPii, setSelectedColumnForPii] = useState(null);
   const [tagMenuAnchor, setTagMenuAnchor] = useState(null);
+
+  // Fetch connectors from backend
+  const fetchConnectors = async () => {
+    try {
+      const response = await fetch('http://localhost:8000/api/connectors');
+      if (response.ok) {
+        const data = await response.json();
+        setConnectors(data || []);
+      }
+    } catch (err) {
+      console.error('Error fetching connectors:', err);
+    }
+  };
+
+  // Load connectors on component mount
+  useEffect(() => {
+    fetchConnectors();
+  }, []);
+
+  // Clear form fields when resource type changes
+  useEffect(() => {
+    // Clear all form fields when switching resource types
+    setGcpProject('');
+    setDataset('');
+    setTableName('');
+    setCatalog('');
+    setSchema('');
+    setTableData(null);
+    setError(null);
+    setCatalogTag(null);
+    setSchemaTag(null);
+  }, [resourceType]);
 
   // Fetch existing tags
   const fetchExistingTags = async () => {
@@ -107,10 +145,34 @@ const MarketplacePage = () => {
     }
   };
 
+  // Helper function to get connector ID for a specific project
+  const getConnectorIdForProject = (projectId) => {
+    // Find BigQuery connector that matches the project ID
+    const bigqueryConnector = connectors.find(connector => 
+      connector.type === 'BigQuery' && 
+      connector.enabled && 
+      connector.project_id === projectId
+    );
+    return bigqueryConnector ? bigqueryConnector.id : null;
+  };
+
   const handleSearch = async () => {
-    if (!gcpProject || !dataset || !tableName) {
-      setError('Please fill in all required fields');
-      return;
+    // Check required fields based on resource type
+    if (resourceType === 'GCP') {
+      if (!gcpProject || !dataset || !tableName) {
+        setError('Please fill in all required fields');
+        return;
+      }
+    } else if (resourceType === 'Starburst Galaxy') {
+      if (!catalog || !schema || !tableName) {
+        setError('Please fill in all required fields');
+        return;
+      }
+    } else {
+      if (!gcpProject || !dataset || !tableName) {
+        setError('Please fill in all required fields');
+        return;
+      }
     }
 
     setLoading(true);
@@ -131,6 +193,7 @@ const MarketplacePage = () => {
             projectId: gcpProject,
             datasetId: dataset,
             tableId: tableName,
+            connectorId: getConnectorIdForProject(gcpProject),
           }),
         });
       } else if (resourceType === 'Starburst Galaxy') {
@@ -141,8 +204,8 @@ const MarketplacePage = () => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            catalog: gcpProject,  // Using gcpProject state for catalog
-            schema: dataset,       // Using dataset state for schema
+            catalog: catalog,  // Use catalog state for Starburst catalog
+            schema: schema,    // Use schema state for Starburst schema
             tableId: tableName,
           }),
         });
@@ -282,7 +345,8 @@ const MarketplacePage = () => {
             piiFound: col.piiFound || false,
             piiType: col.piiType || ''
           })),
-          tableTags: tableData.tableTags || []  // Add table-level tags
+          tableTags: tableData.tableTags || [],  // Add table-level tags
+          connectorId: getConnectorIdForProject(gcpProject)  // Add connector ID
         };
 
         console.log(`📤 Sending publish request to BigQuery API for ${publishData.projectId}.${publishData.datasetId}.${publishData.tableId}...`);
@@ -302,8 +366,8 @@ const MarketplacePage = () => {
         
         // Prepare the data for Starburst publishing
         const publishData = {
-          catalog: gcpProject,
-          schema: dataset,
+          catalog: catalog,  // Use catalog state for Starburst catalog
+          schema: schema,    // Use schema state for Starburst schema
           tableId: tableName,
           columnTags: tableData.columns.map(col => ({
             columnName: col.name,
@@ -323,7 +387,7 @@ const MarketplacePage = () => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(publishData),
-          signal: AbortSignal.timeout(60000), // 60 second timeout
+          signal: AbortSignal.timeout(120000), // 120 second timeout (2 minutes)
         });
         console.log('📥 Starburst API response received');
       } else if (resourceType === 'Azure Purview') {
@@ -372,11 +436,11 @@ const MarketplacePage = () => {
       
       // Handle timeout errors
       if (err.name === 'TimeoutError' || err.message.includes('timeout')) {
-        setSnackbarMessage('Publishing timed out after 60 seconds. Please try again or check your Starburst connection.');
+        setSnackbarMessage('Publishing timed out after 2 minutes. Please check your catalog/schema/table names and try again.');
         setSqlDialogOpen(true);
         setBillingInfo({
           requiresBilling: false,
-          message: '❌ Publishing timed out. This usually means the Starburst API is slow or unresponsive. Please try again.'
+          message: '❌ Publishing timed out after 2 minutes. This usually means:\n\n1. The catalog/schema/table names are incorrect\n2. The Starburst API is slow or unresponsive\n3. You have too many catalogs/schemas/tables to search through\n\nPlease verify your catalog, schema, and table names are correct and try again.'
         });
       } else {
         setSnackbarMessage(`Failed to publish tags: ${err.message}`);
@@ -410,7 +474,8 @@ const MarketplacePage = () => {
             datasetId: dataset,
             tableId: tableName,
             columnName: columnName,
-            tagToDelete: tagToRemove
+            tagToDelete: tagToRemove,
+            connectorId: getConnectorIdForProject(gcpProject)  // Add connector ID
           }),
         });
         
@@ -425,8 +490,8 @@ const MarketplacePage = () => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            catalog: gcpProject,
-            schema: dataset,
+            catalog: catalog,
+            schema: schema,
             tableId: tableName,
             columnTags: [{
               columnName: columnName,
@@ -854,8 +919,8 @@ const MarketplacePage = () => {
                     <TextField
                       fullWidth
                       placeholder="Catalog"
-                      value={gcpProject}
-                      onChange={(e) => setGcpProject(e.target.value)}
+                      value={catalog}
+                      onChange={(e) => setCatalog(e.target.value)}
                       variant="outlined"
                       size="small"
                       style={{ width: '100%', minWidth: '300px' }}
@@ -896,8 +961,8 @@ const MarketplacePage = () => {
               <TextField
                 fullWidth
                       placeholder="Schema"
-                      value={dataset}
-                      onChange={(e) => setDataset(e.target.value)}
+                      value={schema}
+                      onChange={(e) => setSchema(e.target.value)}
                       variant="outlined"
                       size="small"
                       style={{ width: '100%', minWidth: '300px' }}
@@ -1389,32 +1454,39 @@ const MarketplacePage = () => {
                     <TableCell>
                           <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', alignItems: 'center' }}>
                             {column.tags && column.tags.length > 0 ? (
-                              column.tags.map((tag, tagIndex) => (
-                                <Chip 
-                                  key={tagIndex}
-                                  label={tag} 
-                          size="small"
-                                  onDelete={() => handleRemoveTag(column.name, tag)}
-                                  deleteIcon={<Delete fontSize="small" />}
-                                  sx={{
-                                    backgroundColor: '#e3f2fd',
-                                    color: '#1565c0',
-                                    border: '1px solid #90caf9',
-                                    fontWeight: 600,
-                                    fontSize: '0.75rem',
-                                    '&:hover': {
-                                      backgroundColor: '#bbdefb',
-                                    },
-                                    '& .MuiChip-deleteIcon': {
-                                      color: '#1565c0',
-                                      '&:hover': {
-                                        color: '#d32f2f',
-                                      }
-                                    }
-                                  }}
-                                  variant="filled"
-                                />
-                              ))
+                              column.tags.map((tag, tagIndex) => {
+                                // Find the corresponding tag detail for this tag
+                                const tagDetail = column.tagDetails && column.tagDetails.find(detail => detail.displayName === tag);
+                                const tooltipText = tagDetail ? `Tag ID: ${tagDetail.tagId}` : tag;
+                                
+                                return (
+                                  <Tooltip key={tagIndex} title={tooltipText} arrow>
+                                    <Chip 
+                                      label={tag} 
+                                      size="small"
+                                      onDelete={() => handleRemoveTag(column.name, tag)}
+                                      deleteIcon={<Delete fontSize="small" />}
+                                      sx={{
+                                        backgroundColor: '#e3f2fd',
+                                        color: '#1565c0',
+                                        border: '1px solid #90caf9',
+                                        fontWeight: 600,
+                                        fontSize: '0.75rem',
+                                        '&:hover': {
+                                          backgroundColor: '#bbdefb',
+                                        },
+                                        '& .MuiChip-deleteIcon': {
+                                          color: '#1565c0',
+                                          '&:hover': {
+                                            color: '#d32f2f',
+                                          }
+                                        }
+                                      }}
+                                      variant="filled"
+                                    />
+                                  </Tooltip>
+                                );
+                              })
                             ) : (
                               <Typography 
                                 variant="body2" 

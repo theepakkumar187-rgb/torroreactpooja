@@ -1,0 +1,21 @@
+{
+  "single-clock-476523-g7.banking_dataset.accounts": {
+    "projectId": "single-clock-476523-g7",
+    "datasetId": "banking_dataset",
+    "tableId": "accounts",
+    "columns": [
+      {
+        "name": "interest_rate",
+        "tags": [
+          "SENSITIVE_DATA"
+        ],
+        "piiFound": false,
+        "piiType": "None"
+      }
+    ],
+    "tableTags": [
+      "BANKING_DATA"
+    ],
+    "timestamp": "2025-10-28 08:07:49"
+  }
+}

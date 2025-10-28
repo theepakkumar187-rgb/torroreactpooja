@@ -58347,5 +58347,5990 @@
       "sensitivity_level": "Internal",
       "compliance_tags": []
     }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.accounts",
+    "name": "accounts",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:09:53.272280",
+    "status": "active",
+    "description": "Banking accounts table with interconnected data",
+    "num_rows": 2000,
+    "size_bytes": 180974,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "account_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": "Policy Tags: CONFIDENTIAL, FINANCIAL_DATA | PII: Financial Info"
+      },
+      {
+        "name": "customer_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": "Policy Tags: HIGHLY_SENSITIVE, PERSONAL_DATA | PII: Personal Info"
+      },
+      {
+        "name": "account_number",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "account_type",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "opening_date",
+        "type": "DATE",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "current_balance",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "interest_rate",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "status",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.accounts",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.accounts",
+      "format": "BigQuery TABLE",
+      "size_bytes": 180974,
+      "num_rows": 2000,
+      "created_at": "2025-10-28T00:15:19.599000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/accounts",
+      "schema_name": "banking_dataset",
+      "table_name": "accounts",
+      "column_count": 8,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T01:27:05.921000+00:00",
+      "last_accessed": "2025-10-28T07:09:53.272929",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking accounts table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": [
+        "table_policy_tag_1",
+        "policy_tag_0",
+        "policy_tag_1",
+        "table_policy_tag_0"
+      ]
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.accounts_masked",
+    "name": "accounts_masked",
+    "type": "View",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:09:53.753704",
+    "status": "active",
+    "description": "No description available",
+    "num_rows": 0,
+    "size_bytes": 0,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "account_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "customer_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "account_number",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "account_type",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "opening_date",
+        "type": "DATE",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "current_balance",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "interest_rate",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "status",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.accounts_masked",
+      "asset_type": "View",
+      "location": "US - single-clock-476523-g7.banking_dataset.accounts_masked",
+      "format": "BigQuery VIEW",
+      "size_bytes": 0,
+      "num_rows": 0,
+      "created_at": "2025-10-28T01:27:07.808000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/accounts_masked",
+      "schema_name": "banking_dataset",
+      "table_name": "accounts_masked",
+      "column_count": 8,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T01:27:07.808000+00:00",
+      "last_accessed": "2025-10-28T07:09:53.753767",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "No description available",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.aml_monitoring",
+    "name": "aml_monitoring",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:09:54.244325",
+    "status": "active",
+    "description": "Banking aml_monitoring table with interconnected data",
+    "num_rows": 3020,
+    "size_bytes": 141940,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "monitoring_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "customer_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "monitoring_date",
+        "type": "DATE",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "suspicious_activity_score",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "pep_status",
+        "type": "BOOLEAN",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "sanctions_check",
+        "type": "BOOLEAN",
+        "mode": "NULLABLE",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.aml_monitoring",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.aml_monitoring",
+      "format": "BigQuery TABLE",
+      "size_bytes": 141940,
+      "num_rows": 3020,
+      "created_at": "2025-10-28T00:15:33.766000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/aml_monitoring",
+      "schema_name": "banking_dataset",
+      "table_name": "aml_monitoring",
+      "column_count": 6,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:17:55.101000+00:00",
+      "last_accessed": "2025-10-28T07:09:54.244413",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking aml_monitoring table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.annual_financials",
+    "name": "annual_financials",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:09:54.741718",
+    "status": "active",
+    "description": "Banking annual_financials table with interconnected data",
+    "num_rows": 5,
+    "size_bytes": 200,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "year",
+        "type": "INTEGER",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "total_assets",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "total_liabilities",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "total_equity",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "net_income",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.annual_financials",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.annual_financials",
+      "format": "BigQuery TABLE",
+      "size_bytes": 200,
+      "num_rows": 5,
+      "created_at": "2025-10-28T00:15:26.245000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/annual_financials",
+      "schema_name": "banking_dataset",
+      "table_name": "annual_financials",
+      "column_count": 5,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:16:58.525000+00:00",
+      "last_accessed": "2025-10-28T07:09:54.741768",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking annual_financials table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.atm_transactions",
+    "name": "atm_transactions",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:09:55.258531",
+    "status": "active",
+    "description": "Banking atm_transactions table with interconnected data",
+    "num_rows": 0,
+    "size_bytes": 0,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "atm_transaction_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "card_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "atm_location",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "transaction_type",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "amount",
+        "type": "FLOAT",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "transaction_date",
+        "type": "TIMESTAMP",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "fee_amount",
+        "type": "FLOAT",
+        "mode": "REQUIRED",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.atm_transactions",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.atm_transactions",
+      "format": "BigQuery TABLE",
+      "size_bytes": 0,
+      "num_rows": 0,
+      "created_at": "2025-10-28T00:15:49.420000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/atm_transactions",
+      "schema_name": "banking_dataset",
+      "table_name": "atm_transactions",
+      "column_count": 7,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:15:49.469000+00:00",
+      "last_accessed": "2025-10-28T07:09:55.258618",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking atm_transactions table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.audit_trails",
+    "name": "audit_trails",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:09:55.750941",
+    "status": "active",
+    "description": "Banking audit_trails table with interconnected data",
+    "num_rows": 5000,
+    "size_bytes": 312561,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "audit_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "table_name",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "record_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "action",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "timestamp",
+        "type": "DATETIME",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "user_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.audit_trails",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.audit_trails",
+      "format": "BigQuery TABLE",
+      "size_bytes": 312561,
+      "num_rows": 5000,
+      "created_at": "2025-10-28T00:15:27.296000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/audit_trails",
+      "schema_name": "banking_dataset",
+      "table_name": "audit_trails",
+      "column_count": 6,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:17:06.143000+00:00",
+      "last_accessed": "2025-10-28T07:09:55.751870",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking audit_trails table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.backup_schedules",
+    "name": "backup_schedules",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:09:56.264052",
+    "status": "active",
+    "description": "Banking backup_schedules table with interconnected data",
+    "num_rows": 0,
+    "size_bytes": 0,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "backup_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "database_name",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "backup_type",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "schedule_time",
+        "type": "TIME",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "frequency",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "retention_days",
+        "type": "INTEGER",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "last_backup",
+        "type": "TIMESTAMP",
+        "mode": "NULLABLE",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.backup_schedules",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.backup_schedules",
+      "format": "BigQuery TABLE",
+      "size_bytes": 0,
+      "num_rows": 0,
+      "created_at": "2025-10-28T00:15:53.401000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/backup_schedules",
+      "schema_name": "banking_dataset",
+      "table_name": "backup_schedules",
+      "column_count": 7,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:15:53.424000+00:00",
+      "last_accessed": "2025-10-28T07:09:56.264198",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking backup_schedules table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.branch_operations",
+    "name": "branch_operations",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:09:56.863271",
+    "status": "active",
+    "description": "Banking branch_operations table with interconnected data",
+    "num_rows": 0,
+    "size_bytes": 0,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "operation_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "branch_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "operation_type",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "operation_date",
+        "type": "DATE",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "volume",
+        "type": "INTEGER",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "processing_time",
+        "type": "FLOAT",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "error_rate",
+        "type": "FLOAT",
+        "mode": "REQUIRED",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.branch_operations",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.branch_operations",
+      "format": "BigQuery TABLE",
+      "size_bytes": 0,
+      "num_rows": 0,
+      "created_at": "2025-10-28T00:15:52.496000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/branch_operations",
+      "schema_name": "banking_dataset",
+      "table_name": "branch_operations",
+      "column_count": 7,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:15:52.535000+00:00",
+      "last_accessed": "2025-10-28T07:09:56.863670",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking branch_operations table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.branches",
+    "name": "branches",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:09:57.762369",
+    "status": "active",
+    "description": "Banking branches table with interconnected data",
+    "num_rows": 50,
+    "size_bytes": 5128,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "branch_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "branch_name",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "address",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "city",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "state",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "phone",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.branches",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.branches",
+      "format": "BigQuery TABLE",
+      "size_bytes": 5128,
+      "num_rows": 50,
+      "created_at": "2025-10-28T00:15:22.906000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/branches",
+      "schema_name": "banking_dataset",
+      "table_name": "branches",
+      "column_count": 6,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:16:32.517000+00:00",
+      "last_accessed": "2025-10-28T07:09:57.766536",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking branches table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.budget_allocations",
+    "name": "budget_allocations",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:09:58.272188",
+    "status": "active",
+    "description": "Banking budget_allocations table with interconnected data",
+    "num_rows": 250,
+    "size_bytes": 11750,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "allocation_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "cost_center_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "budget_year",
+        "type": "INTEGER",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "allocated_amount",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "spent_amount",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.budget_allocations",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.budget_allocations",
+      "format": "BigQuery TABLE",
+      "size_bytes": 11750,
+      "num_rows": 250,
+      "created_at": "2025-10-28T00:15:30.928000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/budget_allocations",
+      "schema_name": "banking_dataset",
+      "table_name": "budget_allocations",
+      "column_count": 5,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:17:36.642000+00:00",
+      "last_accessed": "2025-10-28T07:09:58.272303",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking budget_allocations table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.call_center_logs",
+    "name": "call_center_logs",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:09:58.739391",
+    "status": "active",
+    "description": "Banking call_center_logs table with interconnected data",
+    "num_rows": 0,
+    "size_bytes": 0,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "call_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "customer_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "agent_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "call_start",
+        "type": "TIMESTAMP",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "call_end",
+        "type": "TIMESTAMP",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "call_duration",
+        "type": "INTEGER",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "call_type",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "resolution",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.call_center_logs",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.call_center_logs",
+      "format": "BigQuery TABLE",
+      "size_bytes": 0,
+      "num_rows": 0,
+      "created_at": "2025-10-28T00:15:51.985000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/call_center_logs",
+      "schema_name": "banking_dataset",
+      "table_name": "call_center_logs",
+      "column_count": 8,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:15:52.035000+00:00",
+      "last_accessed": "2025-10-28T07:09:58.739495",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking call_center_logs table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.capacity_planning",
+    "name": "capacity_planning",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:09:59.206464",
+    "status": "active",
+    "description": "Banking capacity_planning table with interconnected data",
+    "num_rows": 0,
+    "size_bytes": 0,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "capacity_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "resource_type",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "current_usage",
+        "type": "FLOAT",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "capacity_limit",
+        "type": "FLOAT",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "utilization_percent",
+        "type": "FLOAT",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "forecast_date",
+        "type": "DATE",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "projected_usage",
+        "type": "FLOAT",
+        "mode": "REQUIRED",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.capacity_planning",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.capacity_planning",
+      "format": "BigQuery TABLE",
+      "size_bytes": 0,
+      "num_rows": 0,
+      "created_at": "2025-10-28T00:15:55.365000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/capacity_planning",
+      "schema_name": "banking_dataset",
+      "table_name": "capacity_planning",
+      "column_count": 7,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:15:55.422000+00:00",
+      "last_accessed": "2025-10-28T07:09:59.206513",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking capacity_planning table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.cards",
+    "name": "cards",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:09:59.698385",
+    "status": "active",
+    "description": "Banking cards table with interconnected data",
+    "num_rows": 1500,
+    "size_bytes": 120345,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "card_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "account_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "customer_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "card_number",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "card_type",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "expiry_date",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "status",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.cards",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.cards",
+      "format": "BigQuery TABLE",
+      "size_bytes": 120345,
+      "num_rows": 1500,
+      "created_at": "2025-10-28T00:15:20.658000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/cards",
+      "schema_name": "banking_dataset",
+      "table_name": "cards",
+      "column_count": 7,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:16:15.890000+00:00",
+      "last_accessed": "2025-10-28T07:09:59.698566",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking cards table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.cash_flow",
+    "name": "cash_flow",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:00.227719",
+    "status": "active",
+    "description": "Banking cash_flow table with interconnected data",
+    "num_rows": 60,
+    "size_bytes": 2580,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "cashflow_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "period",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "operating_cashflow",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "investing_cashflow",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "financing_cashflow",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.cash_flow",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.cash_flow",
+      "format": "BigQuery TABLE",
+      "size_bytes": 2580,
+      "num_rows": 60,
+      "created_at": "2025-10-28T00:15:32.212000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/cash_flow",
+      "schema_name": "banking_dataset",
+      "table_name": "cash_flow",
+      "column_count": 5,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:17:44.371000+00:00",
+      "last_accessed": "2025-10-28T07:10:00.227768",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking cash_flow table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.check_processing",
+    "name": "check_processing",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:00.735734",
+    "status": "active",
+    "description": "Banking check_processing table with interconnected data",
+    "num_rows": 0,
+    "size_bytes": 0,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "check_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "account_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "check_number",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "amount",
+        "type": "FLOAT",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "payee_name",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "issue_date",
+        "type": "DATE",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "clear_date",
+        "type": "DATE",
+        "mode": "NULLABLE",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.check_processing",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.check_processing",
+      "format": "BigQuery TABLE",
+      "size_bytes": 0,
+      "num_rows": 0,
+      "created_at": "2025-10-28T00:15:50.488000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/check_processing",
+      "schema_name": "banking_dataset",
+      "table_name": "check_processing",
+      "column_count": 7,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:15:50.538000+00:00",
+      "last_accessed": "2025-10-28T07:10:00.735916",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking check_processing table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.compliance_checks",
+    "name": "compliance_checks",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:01.387146",
+    "status": "active",
+    "description": "Banking compliance_checks table with interconnected data",
+    "num_rows": 3018,
+    "size_bytes": 215493,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "check_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "customer_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "check_type",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "check_date",
+        "type": "DATE",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "result",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "notes",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.compliance_checks",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.compliance_checks",
+      "format": "BigQuery TABLE",
+      "size_bytes": 215493,
+      "num_rows": 3018,
+      "created_at": "2025-10-28T00:15:27.831000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/compliance_checks",
+      "schema_name": "banking_dataset",
+      "table_name": "compliance_checks",
+      "column_count": 6,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:17:10.405000+00:00",
+      "last_accessed": "2025-10-28T07:10:01.387525",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking compliance_checks table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.cost_centers",
+    "name": "cost_centers",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:01.872020",
+    "status": "active",
+    "description": "Banking cost_centers table with interconnected data",
+    "num_rows": 50,
+    "size_bytes": 2536,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "cost_center_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "cost_center_name",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "department",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "budget",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "actual_spend",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.cost_centers",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.cost_centers",
+      "format": "BigQuery TABLE",
+      "size_bytes": 2536,
+      "num_rows": 50,
+      "created_at": "2025-10-28T00:15:30.439000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/cost_centers",
+      "schema_name": "banking_dataset",
+      "table_name": "cost_centers",
+      "column_count": 5,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:17:32.243000+00:00",
+      "last_accessed": "2025-10-28T07:10:01.872120",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking cost_centers table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.credit_risk_assessments",
+    "name": "credit_risk_assessments",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:02.350714",
+    "status": "active",
+    "description": "Banking credit_risk_assessments table with interconnected data",
+    "num_rows": 2064,
+    "size_bytes": 123674,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "assessment_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "customer_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "assessment_date",
+        "type": "DATE",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "credit_score",
+        "type": "INTEGER",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "risk_rating",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "probability_of_default",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.credit_risk_assessments",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.credit_risk_assessments",
+      "format": "BigQuery TABLE",
+      "size_bytes": 123674,
+      "num_rows": 2064,
+      "created_at": "2025-10-28T00:15:32.821000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/credit_risk_assessments",
+      "schema_name": "banking_dataset",
+      "table_name": "credit_risk_assessments",
+      "column_count": 6,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:17:47.997000+00:00",
+      "last_accessed": "2025-10-28T07:10:02.350759",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking credit_risk_assessments table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.customer_advisor",
+    "name": "customer_advisor",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:02.777637",
+    "status": "active",
+    "description": "Banking customer_advisor table with interconnected data",
+    "num_rows": 0,
+    "size_bytes": 0,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "advisor_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "customer_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "advisor_name",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "assignment_date",
+        "type": "DATE",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "relationship_type",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "meeting_frequency",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "last_meeting",
+        "type": "DATE",
+        "mode": "NULLABLE",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.customer_advisor",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.customer_advisor",
+      "format": "BigQuery TABLE",
+      "size_bytes": 0,
+      "num_rows": 0,
+      "created_at": "2025-10-28T00:15:48.148000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/customer_advisor",
+      "schema_name": "banking_dataset",
+      "table_name": "customer_advisor",
+      "column_count": 7,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:15:48.205000+00:00",
+      "last_accessed": "2025-10-28T07:10:02.777868",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking customer_advisor table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.customer_analytics",
+    "name": "customer_analytics",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:03.230209",
+    "status": "active",
+    "description": "Banking customer_analytics table with interconnected data",
+    "num_rows": 0,
+    "size_bytes": 0,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "analytics_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "customer_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "analysis_date",
+        "type": "DATE",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "clv_score",
+        "type": "FLOAT",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "churn_probability",
+        "type": "FLOAT",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "engagement_score",
+        "type": "FLOAT",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "value_tier",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.customer_analytics",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.customer_analytics",
+      "format": "BigQuery TABLE",
+      "size_bytes": 0,
+      "num_rows": 0,
+      "created_at": "2025-10-28T00:15:45.412000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/customer_analytics",
+      "schema_name": "banking_dataset",
+      "table_name": "customer_analytics",
+      "column_count": 7,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:15:45.466000+00:00",
+      "last_accessed": "2025-10-28T07:10:03.230288",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking customer_analytics table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.customer_behavior",
+    "name": "customer_behavior",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:03.833672",
+    "status": "active",
+    "description": "Banking customer_behavior table with interconnected data",
+    "num_rows": 0,
+    "size_bytes": 0,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "behavior_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "customer_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "behavior_date",
+        "type": "DATE",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "behavior_type",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "frequency",
+        "type": "INTEGER",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "intensity",
+        "type": "FLOAT",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "pattern",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.customer_behavior",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.customer_behavior",
+      "format": "BigQuery TABLE",
+      "size_bytes": 0,
+      "num_rows": 0,
+      "created_at": "2025-10-28T00:15:46.899000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/customer_behavior",
+      "schema_name": "banking_dataset",
+      "table_name": "customer_behavior",
+      "column_count": 7,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:15:46.948000+00:00",
+      "last_accessed": "2025-10-28T07:10:03.833716",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking customer_behavior table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.customer_communication",
+    "name": "customer_communication",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:04.327553",
+    "status": "active",
+    "description": "Banking customer_communication table with interconnected data",
+    "num_rows": 0,
+    "size_bytes": 0,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "communication_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "customer_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "communication_type",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "communication_date",
+        "type": "TIMESTAMP",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "channel",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "content",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "response",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.customer_communication",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.customer_communication",
+      "format": "BigQuery TABLE",
+      "size_bytes": 0,
+      "num_rows": 0,
+      "created_at": "2025-10-28T00:15:46.397000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/customer_communication",
+      "schema_name": "banking_dataset",
+      "table_name": "customer_communication",
+      "column_count": 7,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:15:46.455000+00:00",
+      "last_accessed": "2025-10-28T07:10:04.327969",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking customer_communication table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.customer_complaints",
+    "name": "customer_complaints",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:04.811112",
+    "status": "active",
+    "description": "Banking customer_complaints table with interconnected data",
+    "num_rows": 0,
+    "size_bytes": 0,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "complaint_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "customer_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "complaint_date",
+        "type": "DATE",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "complaint_type",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "description",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "status",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "resolution_date",
+        "type": "DATE",
+        "mode": "NULLABLE",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.customer_complaints",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.customer_complaints",
+      "format": "BigQuery TABLE",
+      "size_bytes": 0,
+      "num_rows": 0,
+      "created_at": "2025-10-28T00:15:43.522000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/customer_complaints",
+      "schema_name": "banking_dataset",
+      "table_name": "customer_complaints",
+      "column_count": 7,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:15:43.563000+00:00",
+      "last_accessed": "2025-10-28T07:10:04.811363",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking customer_complaints table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.customer_feedback",
+    "name": "customer_feedback",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:05.353881",
+    "status": "active",
+    "description": "Banking customer_feedback table with interconnected data",
+    "num_rows": 0,
+    "size_bytes": 0,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "feedback_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "customer_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "feedback_date",
+        "type": "DATE",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "feedback_type",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "rating",
+        "type": "INTEGER",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "comments",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "action_taken",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.customer_feedback",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.customer_feedback",
+      "format": "BigQuery TABLE",
+      "size_bytes": 0,
+      "num_rows": 0,
+      "created_at": "2025-10-28T00:15:48.651000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/customer_feedback",
+      "schema_name": "banking_dataset",
+      "table_name": "customer_feedback",
+      "column_count": 7,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:15:48.708000+00:00",
+      "last_accessed": "2025-10-28T07:10:05.354121",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking customer_feedback table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.customer_goals",
+    "name": "customer_goals",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:05.804933",
+    "status": "active",
+    "description": "Banking customer_goals table with interconnected data",
+    "num_rows": 0,
+    "size_bytes": 0,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "goal_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "customer_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "goal_type",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "target_amount",
+        "type": "FLOAT",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "current_progress",
+        "type": "FLOAT",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "target_date",
+        "type": "DATE",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "status",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.customer_goals",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.customer_goals",
+      "format": "BigQuery TABLE",
+      "size_bytes": 0,
+      "num_rows": 0,
+      "created_at": "2025-10-28T00:15:47.373000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/customer_goals",
+      "schema_name": "banking_dataset",
+      "table_name": "customer_goals",
+      "column_count": 7,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:15:47.420000+00:00",
+      "last_accessed": "2025-10-28T07:10:05.804985",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking customer_goals table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.customer_interactions",
+    "name": "customer_interactions",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:06.292244",
+    "status": "active",
+    "description": "Banking customer_interactions table with interconnected data",
+    "num_rows": 0,
+    "size_bytes": 0,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "interaction_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "customer_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "employee_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "interaction_type",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "interaction_date",
+        "type": "TIMESTAMP",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "duration_minutes",
+        "type": "INTEGER",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "channel",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "satisfaction_score",
+        "type": "INTEGER",
+        "mode": "NULLABLE",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.customer_interactions",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.customer_interactions",
+      "format": "BigQuery TABLE",
+      "size_bytes": 0,
+      "num_rows": 0,
+      "created_at": "2025-10-28T00:15:41.135000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/customer_interactions",
+      "schema_name": "banking_dataset",
+      "table_name": "customer_interactions",
+      "column_count": 8,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:15:41.182000+00:00",
+      "last_accessed": "2025-10-28T07:10:06.292381",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking customer_interactions table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.customer_lifecycle",
+    "name": "customer_lifecycle",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:06.795839",
+    "status": "active",
+    "description": "Banking customer_lifecycle table with interconnected data",
+    "num_rows": 0,
+    "size_bytes": 0,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "lifecycle_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "customer_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "lifecycle_stage",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "stage_date",
+        "type": "DATE",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "next_stage",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "transition_probability",
+        "type": "FLOAT",
+        "mode": "REQUIRED",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.customer_lifecycle",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.customer_lifecycle",
+      "format": "BigQuery TABLE",
+      "size_bytes": 0,
+      "num_rows": 0,
+      "created_at": "2025-10-28T00:15:42.617000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/customer_lifecycle",
+      "schema_name": "banking_dataset",
+      "table_name": "customer_lifecycle",
+      "column_count": 6,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:15:42.638000+00:00",
+      "last_accessed": "2025-10-28T07:10:06.795964",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking customer_lifecycle table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.customer_marketing",
+    "name": "customer_marketing",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:07.291983",
+    "status": "active",
+    "description": "Banking customer_marketing table with interconnected data",
+    "num_rows": 0,
+    "size_bytes": 0,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "marketing_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "customer_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "campaign_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "marketing_date",
+        "type": "DATE",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "channel",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "response",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "conversion",
+        "type": "BOOLEAN",
+        "mode": "REQUIRED",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.customer_marketing",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.customer_marketing",
+      "format": "BigQuery TABLE",
+      "size_bytes": 0,
+      "num_rows": 0,
+      "created_at": "2025-10-28T00:15:44.787000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/customer_marketing",
+      "schema_name": "banking_dataset",
+      "table_name": "customer_marketing",
+      "column_count": 7,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:15:44.827000+00:00",
+      "last_accessed": "2025-10-28T07:10:07.292125",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking customer_marketing table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.customer_preferences",
+    "name": "customer_preferences",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:07.741876",
+    "status": "active",
+    "description": "Banking customer_preferences table with interconnected data",
+    "num_rows": 0,
+    "size_bytes": 0,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "customer_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "preference_type",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "preference_value",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "updated_date",
+        "type": "TIMESTAMP",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "source",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.customer_preferences",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.customer_preferences",
+      "format": "BigQuery TABLE",
+      "size_bytes": 0,
+      "num_rows": 0,
+      "created_at": "2025-10-28T00:15:41.606000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/customer_preferences",
+      "schema_name": "banking_dataset",
+      "table_name": "customer_preferences",
+      "column_count": 5,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:15:41.647000+00:00",
+      "last_accessed": "2025-10-28T07:10:07.741984",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking customer_preferences table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.customer_products",
+    "name": "customer_products",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:08.184443",
+    "status": "active",
+    "description": "Banking customer_products table with interconnected data",
+    "num_rows": 0,
+    "size_bytes": 0,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "customer_product_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "customer_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "product_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "acquisition_date",
+        "type": "DATE",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "status",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "usage_frequency",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "satisfaction_rating",
+        "type": "INTEGER",
+        "mode": "REQUIRED",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.customer_products",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.customer_products",
+      "format": "BigQuery TABLE",
+      "size_bytes": 0,
+      "num_rows": 0,
+      "created_at": "2025-10-28T00:15:45.915000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/customer_products",
+      "schema_name": "banking_dataset",
+      "table_name": "customer_products",
+      "column_count": 7,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:15:45.969000+00:00",
+      "last_accessed": "2025-10-28T07:10:08.184495",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking customer_products table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.customer_referrals",
+    "name": "customer_referrals",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:08.673480",
+    "status": "active",
+    "description": "Banking customer_referrals table with interconnected data",
+    "num_rows": 0,
+    "size_bytes": 0,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "referral_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "referrer_customer_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "referred_customer_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "referral_date",
+        "type": "DATE",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "referral_bonus",
+        "type": "FLOAT",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "status",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.customer_referrals",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.customer_referrals",
+      "format": "BigQuery TABLE",
+      "size_bytes": 0,
+      "num_rows": 0,
+      "created_at": "2025-10-28T00:15:43.977000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/customer_referrals",
+      "schema_name": "banking_dataset",
+      "table_name": "customer_referrals",
+      "column_count": 6,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:15:44.022000+00:00",
+      "last_accessed": "2025-10-28T07:10:08.673623",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking customer_referrals table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.customer_satisfaction",
+    "name": "customer_satisfaction",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:09.141870",
+    "status": "active",
+    "description": "Banking customer_satisfaction table with interconnected data",
+    "num_rows": 0,
+    "size_bytes": 0,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "satisfaction_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "customer_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "survey_date",
+        "type": "DATE",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "overall_score",
+        "type": "INTEGER",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "service_score",
+        "type": "INTEGER",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "product_score",
+        "type": "INTEGER",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "recommendation_score",
+        "type": "INTEGER",
+        "mode": "REQUIRED",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.customer_satisfaction",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.customer_satisfaction",
+      "format": "BigQuery TABLE",
+      "size_bytes": 0,
+      "num_rows": 0,
+      "created_at": "2025-10-28T00:15:43.046000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/customer_satisfaction",
+      "schema_name": "banking_dataset",
+      "table_name": "customer_satisfaction",
+      "column_count": 7,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:15:43.102000+00:00",
+      "last_accessed": "2025-10-28T07:10:09.142152",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking customer_satisfaction table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.customer_segments",
+    "name": "customer_segments",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:09.615771",
+    "status": "active",
+    "description": "Banking customer_segments table with interconnected data",
+    "num_rows": 0,
+    "size_bytes": 0,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "customer_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "segment_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "segment_name",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "assignment_date",
+        "type": "DATE",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "confidence_score",
+        "type": "FLOAT",
+        "mode": "REQUIRED",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.customer_segments",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.customer_segments",
+      "format": "BigQuery TABLE",
+      "size_bytes": 0,
+      "num_rows": 0,
+      "created_at": "2025-10-28T00:15:42.092000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/customer_segments",
+      "schema_name": "banking_dataset",
+      "table_name": "customer_segments",
+      "column_count": 5,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:15:42.143000+00:00",
+      "last_accessed": "2025-10-28T07:10:09.616033",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking customer_segments table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.customers",
+    "name": "customers",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:10.078022",
+    "status": "active",
+    "description": "Banking customers table with interconnected data",
+    "num_rows": 1000,
+    "size_bytes": 177326,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "customer_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "first_name",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "last_name",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "ssn",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "date_of_birth",
+        "type": "DATE",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "email",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "phone",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "address",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "city",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "state",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "zip_code",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "annual_income",
+        "type": "INTEGER",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "credit_score",
+        "type": "INTEGER",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "customer_since",
+        "type": "DATE",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "risk_profile",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.customers",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.customers",
+      "format": "BigQuery TABLE",
+      "size_bytes": 177326,
+      "num_rows": 1000,
+      "created_at": "2025-10-28T00:15:18.984000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/customers",
+      "schema_name": "banking_dataset",
+      "table_name": "customers",
+      "column_count": 15,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:16:02.299000+00:00",
+      "last_accessed": "2025-10-28T07:10:10.078233",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking customers table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.daily_balances",
+    "name": "daily_balances",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:10.550325",
+    "status": "active",
+    "description": "Banking daily_balances table with interconnected data",
+    "num_rows": 60000,
+    "size_bytes": 2700000,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "account_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "balance_date",
+        "type": "DATE",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "opening_balance",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "closing_balance",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "daily_change",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.daily_balances",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.daily_balances",
+      "format": "BigQuery TABLE",
+      "size_bytes": 2700000,
+      "num_rows": 60000,
+      "created_at": "2025-10-28T00:15:24.818000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/daily_balances",
+      "schema_name": "banking_dataset",
+      "table_name": "daily_balances",
+      "column_count": 5,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:16:45.120000+00:00",
+      "last_accessed": "2025-10-28T07:10:10.550434",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking daily_balances table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.disaster_recovery",
+    "name": "disaster_recovery",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:11.022790",
+    "status": "active",
+    "description": "Banking disaster_recovery table with interconnected data",
+    "num_rows": 0,
+    "size_bytes": 0,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "dr_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "system_name",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "recovery_site",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "rto_hours",
+        "type": "FLOAT",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "rpo_hours",
+        "type": "FLOAT",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "last_test_date",
+        "type": "DATE",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "test_result",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "status",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.disaster_recovery",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.disaster_recovery",
+      "format": "BigQuery TABLE",
+      "size_bytes": 0,
+      "num_rows": 0,
+      "created_at": "2025-10-28T00:15:55.857000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/disaster_recovery",
+      "schema_name": "banking_dataset",
+      "table_name": "disaster_recovery",
+      "column_count": 8,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:15:55.901000+00:00",
+      "last_accessed": "2025-10-28T07:10:11.022937",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking disaster_recovery table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.employees",
+    "name": "employees",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:11.551937",
+    "status": "active",
+    "description": "Banking employees table with interconnected data",
+    "num_rows": 200,
+    "size_bytes": 17126,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "employee_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "first_name",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "last_name",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "ssn",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "email",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "position",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "branch_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.employees",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.employees",
+      "format": "BigQuery TABLE",
+      "size_bytes": 17126,
+      "num_rows": 200,
+      "created_at": "2025-10-28T00:15:23.618000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/employees",
+      "schema_name": "banking_dataset",
+      "table_name": "employees",
+      "column_count": 7,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:16:36.103000+00:00",
+      "last_accessed": "2025-10-28T07:10:11.551979",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking employees table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.fee_schedules",
+    "name": "fee_schedules",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:12.027545",
+    "status": "active",
+    "description": "Banking fee_schedules table with interconnected data",
+    "num_rows": 192,
+    "size_bytes": 11675,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "fee_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "product_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "fee_type",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "amount",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "frequency",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "effective_date",
+        "type": "DATE",
+        "mode": "NULLABLE",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.fee_schedules",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.fee_schedules",
+      "format": "BigQuery TABLE",
+      "size_bytes": 11675,
+      "num_rows": 192,
+      "created_at": "2025-10-28T00:15:28.774000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/fee_schedules",
+      "schema_name": "banking_dataset",
+      "table_name": "fee_schedules",
+      "column_count": 6,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:17:18.214000+00:00",
+      "last_accessed": "2025-10-28T07:10:12.027667",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking fee_schedules table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.fraud_detection_alerts",
+    "name": "fraud_detection_alerts",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:12.464601",
+    "status": "active",
+    "description": "Banking fraud_detection_alerts table with interconnected data",
+    "num_rows": 863,
+    "size_bytes": 74656,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "alert_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "customer_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "account_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "alert_type",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "risk_score",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "alert_date",
+        "type": "DATETIME",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "status",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.fraud_detection_alerts",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.fraud_detection_alerts",
+      "format": "BigQuery TABLE",
+      "size_bytes": 74656,
+      "num_rows": 863,
+      "created_at": "2025-10-28T00:15:33.305000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/fraud_detection_alerts",
+      "schema_name": "banking_dataset",
+      "table_name": "fraud_detection_alerts",
+      "column_count": 7,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:17:51.494000+00:00",
+      "last_accessed": "2025-10-28T07:10:12.464729",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking fraud_detection_alerts table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.insurance",
+    "name": "insurance",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:12.911533",
+    "status": "active",
+    "description": "Banking insurance table with interconnected data",
+    "num_rows": 400,
+    "size_bytes": 22915,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "policy_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "customer_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "insurance_type",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "coverage_amount",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "premium_amount",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "status",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.insurance",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.insurance",
+      "format": "BigQuery TABLE",
+      "size_bytes": 22915,
+      "num_rows": 400,
+      "created_at": "2025-10-28T00:15:22.248000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/insurance",
+      "schema_name": "banking_dataset",
+      "table_name": "insurance",
+      "column_count": 6,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:16:28.537000+00:00",
+      "last_accessed": "2025-10-28T07:10:12.911670",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking insurance table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.interest_calculations",
+    "name": "interest_calculations",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:13.390728",
+    "status": "active",
+    "description": "Banking interest_calculations table with interconnected data",
+    "num_rows": 60000,
+    "size_bytes": 4140000,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "calculation_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "account_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "calculation_date",
+        "type": "DATE",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "principal_balance",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "interest_rate",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "interest_amount",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.interest_calculations",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.interest_calculations",
+      "format": "BigQuery TABLE",
+      "size_bytes": 4140000,
+      "num_rows": 60000,
+      "created_at": "2025-10-28T00:15:29.447000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/interest_calculations",
+      "schema_name": "banking_dataset",
+      "table_name": "interest_calculations",
+      "column_count": 6,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:17:23.303000+00:00",
+      "last_accessed": "2025-10-28T07:10:13.390854",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking interest_calculations table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.investments",
+    "name": "investments",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:13.825704",
+    "status": "active",
+    "description": "Banking investments table with interconnected data",
+    "num_rows": 600,
+    "size_bytes": 36291,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "investment_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "customer_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "investment_type",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "symbol",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "quantity",
+        "type": "INTEGER",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "current_value",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "purchase_date",
+        "type": "DATE",
+        "mode": "NULLABLE",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.investments",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.investments",
+      "format": "BigQuery TABLE",
+      "size_bytes": 36291,
+      "num_rows": 600,
+      "created_at": "2025-10-28T00:15:21.744000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/investments",
+      "schema_name": "banking_dataset",
+      "table_name": "investments",
+      "column_count": 7,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:16:24.984000+00:00",
+      "last_accessed": "2025-10-28T07:10:13.825750",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking investments table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.liquidity_risk",
+    "name": "liquidity_risk",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:14.272862",
+    "status": "active",
+    "description": "Banking liquidity_risk table with interconnected data",
+    "num_rows": 50,
+    "size_bytes": 2550,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "liquidity_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "assessment_date",
+        "type": "DATE",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "liquid_assets",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "total_liabilities",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "liquidity_ratio",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "stress_test_result",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.liquidity_risk",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.liquidity_risk",
+      "format": "BigQuery TABLE",
+      "size_bytes": 2550,
+      "num_rows": 50,
+      "created_at": "2025-10-28T00:15:35.434000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/liquidity_risk",
+      "schema_name": "banking_dataset",
+      "table_name": "liquidity_risk",
+      "column_count": 6,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:18:07.849000+00:00",
+      "last_accessed": "2025-10-28T07:10:14.273055",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking liquidity_risk table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.loans",
+    "name": "loans",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:14.743747",
+    "status": "active",
+    "description": "Banking loans table with interconnected data",
+    "num_rows": 800,
+    "size_bytes": 53951,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "loan_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "customer_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "loan_type",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "loan_amount",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "outstanding_balance",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "interest_rate",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "status",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.loans",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.loans",
+      "format": "BigQuery TABLE",
+      "size_bytes": 53951,
+      "num_rows": 800,
+      "created_at": "2025-10-28T00:15:21.138000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/loans",
+      "schema_name": "banking_dataset",
+      "table_name": "loans",
+      "column_count": 7,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:16:20.680000+00:00",
+      "last_accessed": "2025-10-28T07:10:14.743955",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking loans table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.maintenance_windows",
+    "name": "maintenance_windows",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:15.222088",
+    "status": "active",
+    "description": "Banking maintenance_windows table with interconnected data",
+    "num_rows": 0,
+    "size_bytes": 0,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "maintenance_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "system_name",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "maintenance_type",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "scheduled_start",
+        "type": "TIMESTAMP",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "scheduled_end",
+        "type": "TIMESTAMP",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "actual_start",
+        "type": "TIMESTAMP",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "actual_end",
+        "type": "TIMESTAMP",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "status",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.maintenance_windows",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.maintenance_windows",
+      "format": "BigQuery TABLE",
+      "size_bytes": 0,
+      "num_rows": 0,
+      "created_at": "2025-10-28T00:15:53.867000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/maintenance_windows",
+      "schema_name": "banking_dataset",
+      "table_name": "maintenance_windows",
+      "column_count": 8,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:15:53.916000+00:00",
+      "last_accessed": "2025-10-28T07:10:15.222261",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking maintenance_windows table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.market_risk",
+    "name": "market_risk",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:15.659656",
+    "status": "active",
+    "description": "Banking market_risk table with interconnected data",
+    "num_rows": 100,
+    "size_bytes": 5941,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "risk_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "portfolio_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "risk_type",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "var_amount",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "confidence_level",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "calculation_date",
+        "type": "DATE",
+        "mode": "NULLABLE",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.market_risk",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.market_risk",
+      "format": "BigQuery TABLE",
+      "size_bytes": 5941,
+      "num_rows": 100,
+      "created_at": "2025-10-28T00:15:34.977000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/market_risk",
+      "schema_name": "banking_dataset",
+      "table_name": "market_risk",
+      "column_count": 6,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:18:03.040000+00:00",
+      "last_accessed": "2025-10-28T07:10:15.659705",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking market_risk table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.mobile_app_usage",
+    "name": "mobile_app_usage",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:16.294783",
+    "status": "active",
+    "description": "Banking mobile_app_usage table with interconnected data",
+    "num_rows": 0,
+    "size_bytes": 0,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "usage_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "customer_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "app_version",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "session_duration",
+        "type": "INTEGER",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "features_used",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "usage_date",
+        "type": "DATE",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "device_info",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.mobile_app_usage",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.mobile_app_usage",
+      "format": "BigQuery TABLE",
+      "size_bytes": 0,
+      "num_rows": 0,
+      "created_at": "2025-10-28T00:15:51.550000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/mobile_app_usage",
+      "schema_name": "banking_dataset",
+      "table_name": "mobile_app_usage",
+      "column_count": 7,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:15:51.577000+00:00",
+      "last_accessed": "2025-10-28T07:10:16.295061",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking mobile_app_usage table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.monthly_statements",
+    "name": "monthly_statements",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:16.781735",
+    "status": "active",
+    "description": "Banking monthly_statements table with interconnected data",
+    "num_rows": 24000,
+    "size_bytes": 1728000,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "statement_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "account_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "customer_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "statement_month",
+        "type": "DATE",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "opening_balance",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "closing_balance",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.monthly_statements",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.monthly_statements",
+      "format": "BigQuery TABLE",
+      "size_bytes": 1728000,
+      "num_rows": 24000,
+      "created_at": "2025-10-28T00:15:25.283000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/monthly_statements",
+      "schema_name": "banking_dataset",
+      "table_name": "monthly_statements",
+      "column_count": 6,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:16:49.800000+00:00",
+      "last_accessed": "2025-10-28T07:10:16.781826",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking monthly_statements table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.online_banking",
+    "name": "online_banking",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:17.311930",
+    "status": "active",
+    "description": "Banking online_banking table with interconnected data",
+    "num_rows": 0,
+    "size_bytes": 0,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "session_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "customer_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "login_time",
+        "type": "TIMESTAMP",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "logout_time",
+        "type": "TIMESTAMP",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "ip_address",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "device_type",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "activities_count",
+        "type": "INTEGER",
+        "mode": "REQUIRED",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.online_banking",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.online_banking",
+      "format": "BigQuery TABLE",
+      "size_bytes": 0,
+      "num_rows": 0,
+      "created_at": "2025-10-28T00:15:50.966000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/online_banking",
+      "schema_name": "banking_dataset",
+      "table_name": "online_banking",
+      "column_count": 7,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:15:51.019000+00:00",
+      "last_accessed": "2025-10-28T07:10:17.311974",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking online_banking table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.operational_risk",
+    "name": "operational_risk",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:17.783780",
+    "status": "active",
+    "description": "Banking operational_risk table with interconnected data",
+    "num_rows": 200,
+    "size_bytes": 23554,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "risk_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "risk_category",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "risk_description",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "probability",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "impact",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "mitigation_plan",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.operational_risk",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.operational_risk",
+      "format": "BigQuery TABLE",
+      "size_bytes": 23554,
+      "num_rows": 200,
+      "created_at": "2025-10-28T00:15:34.346000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/operational_risk",
+      "schema_name": "banking_dataset",
+      "table_name": "operational_risk",
+      "column_count": 6,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:17:59.410000+00:00",
+      "last_accessed": "2025-10-28T07:10:17.783906",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking operational_risk table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.performance_metrics",
+    "name": "performance_metrics",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:18.250663",
+    "status": "active",
+    "description": "Banking performance_metrics table with interconnected data",
+    "num_rows": 0,
+    "size_bytes": 0,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "metric_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "system_name",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "metric_name",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "metric_value",
+        "type": "FLOAT",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "measurement_time",
+        "type": "TIMESTAMP",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "threshold",
+        "type": "FLOAT",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "status",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.performance_metrics",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.performance_metrics",
+      "format": "BigQuery TABLE",
+      "size_bytes": 0,
+      "num_rows": 0,
+      "created_at": "2025-10-28T00:15:54.412000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/performance_metrics",
+      "schema_name": "banking_dataset",
+      "table_name": "performance_metrics",
+      "column_count": 7,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:15:54.466000+00:00",
+      "last_accessed": "2025-10-28T07:10:18.250722",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking performance_metrics table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.products",
+    "name": "products",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:18.713919",
+    "status": "active",
+    "description": "Banking products table with interconnected data",
+    "num_rows": 100,
+    "size_bytes": 5175,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "product_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "product_name",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "product_type",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "interest_rate",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "is_active",
+        "type": "BOOLEAN",
+        "mode": "NULLABLE",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.products",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.products",
+      "format": "BigQuery TABLE",
+      "size_bytes": 5175,
+      "num_rows": 100,
+      "created_at": "2025-10-28T00:15:24.218000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/products",
+      "schema_name": "banking_dataset",
+      "table_name": "products",
+      "column_count": 5,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:16:40.328000+00:00",
+      "last_accessed": "2025-10-28T07:10:18.714082",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking products table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.profit_loss",
+    "name": "profit_loss",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:19.490247",
+    "status": "active",
+    "description": "Banking profit_loss table with interconnected data",
+    "num_rows": 60,
+    "size_bytes": 2580,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "pl_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "period",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "revenue",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "expenses",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "net_income",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.profit_loss",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.profit_loss",
+      "format": "BigQuery TABLE",
+      "size_bytes": 2580,
+      "num_rows": 60,
+      "created_at": "2025-10-28T00:15:31.612000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/profit_loss",
+      "schema_name": "banking_dataset",
+      "table_name": "profit_loss",
+      "column_count": 5,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:17:40.087000+00:00",
+      "last_accessed": "2025-10-28T07:10:19.490347",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking profit_loss table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.quarterly_reports",
+    "name": "quarterly_reports",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:19.974148",
+    "status": "active",
+    "description": "Banking quarterly_reports table with interconnected data",
+    "num_rows": 20,
+    "size_bytes": 920,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "report_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "quarter",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "year",
+        "type": "INTEGER",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "total_revenue",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "total_expenses",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "net_income",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.quarterly_reports",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.quarterly_reports",
+      "format": "BigQuery TABLE",
+      "size_bytes": 920,
+      "num_rows": 20,
+      "created_at": "2025-10-28T00:15:25.746000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/quarterly_reports",
+      "schema_name": "banking_dataset",
+      "table_name": "quarterly_reports",
+      "column_count": 6,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:16:54.189000+00:00",
+      "last_accessed": "2025-10-28T07:10:19.974325",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking quarterly_reports table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.regulatory_reports",
+    "name": "regulatory_reports",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:20.448797",
+    "status": "active",
+    "description": "Banking regulatory_reports table with interconnected data",
+    "num_rows": 100,
+    "size_bytes": 4321,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "report_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "report_type",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "reporting_period",
+        "type": "DATE",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "total_assets",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "regulator",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.regulatory_reports",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.regulatory_reports",
+      "format": "BigQuery TABLE",
+      "size_bytes": 4321,
+      "num_rows": 100,
+      "created_at": "2025-10-28T00:15:26.714000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/regulatory_reports",
+      "schema_name": "banking_dataset",
+      "table_name": "regulatory_reports",
+      "column_count": 5,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:17:02.082000+00:00",
+      "last_accessed": "2025-10-28T07:10:20.448983",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking regulatory_reports table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.revenue_recognition",
+    "name": "revenue_recognition",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:20.891846",
+    "status": "active",
+    "description": "Banking revenue_recognition table with interconnected data",
+    "num_rows": 24000,
+    "size_bytes": 1703174,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "revenue_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "account_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "revenue_type",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "amount",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "recognition_date",
+        "type": "DATE",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "period",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.revenue_recognition",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.revenue_recognition",
+      "format": "BigQuery TABLE",
+      "size_bytes": 1703174,
+      "num_rows": 24000,
+      "created_at": "2025-10-28T00:15:29.951000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/revenue_recognition",
+      "schema_name": "banking_dataset",
+      "table_name": "revenue_recognition",
+      "column_count": 6,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:17:28.216000+00:00",
+      "last_accessed": "2025-10-28T07:10:20.892031",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking revenue_recognition table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.risk_appetite",
+    "name": "risk_appetite",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:21.346485",
+    "status": "active",
+    "description": "Banking risk_appetite table with interconnected data",
+    "num_rows": 5,
+    "size_bytes": 325,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "appetite_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "risk_category",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "tolerance_level",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "threshold_amount",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "review_date",
+        "type": "DATE",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "approved_by",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.risk_appetite",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.risk_appetite",
+      "format": "BigQuery TABLE",
+      "size_bytes": 325,
+      "num_rows": 5,
+      "created_at": "2025-10-28T00:15:37.894000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/risk_appetite",
+      "schema_name": "banking_dataset",
+      "table_name": "risk_appetite",
+      "column_count": 6,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:18:30.017000+00:00",
+      "last_accessed": "2025-10-28T07:10:21.346896",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking risk_appetite table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.risk_controls",
+    "name": "risk_controls",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:21.850288",
+    "status": "active",
+    "description": "Banking risk_controls table with interconnected data",
+    "num_rows": 100,
+    "size_bytes": 6374,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "control_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "control_name",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "control_type",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "frequency",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "effectiveness",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "last_test_date",
+        "type": "DATE",
+        "mode": "NULLABLE",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.risk_controls",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.risk_controls",
+      "format": "BigQuery TABLE",
+      "size_bytes": 6374,
+      "num_rows": 100,
+      "created_at": "2025-10-28T00:15:40.523000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/risk_controls",
+      "schema_name": "banking_dataset",
+      "table_name": "risk_controls",
+      "column_count": 6,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:18:45.861000+00:00",
+      "last_accessed": "2025-10-28T07:10:21.850337",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking risk_controls table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.risk_events",
+    "name": "risk_events",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:22.460769",
+    "status": "active",
+    "description": "Banking risk_events table with interconnected data",
+    "num_rows": 200,
+    "size_bytes": 18151,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "event_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "event_type",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "event_date",
+        "type": "DATE",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "impact_amount",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "description",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "status",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.risk_events",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.risk_events",
+      "format": "BigQuery TABLE",
+      "size_bytes": 18151,
+      "num_rows": 200,
+      "created_at": "2025-10-28T00:15:36.843000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/risk_events",
+      "schema_name": "banking_dataset",
+      "table_name": "risk_events",
+      "column_count": 6,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:18:19.706000+00:00",
+      "last_accessed": "2025-10-28T07:10:22.460935",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking risk_events table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.risk_governance",
+    "name": "risk_governance",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:22.958013",
+    "status": "active",
+    "description": "Banking risk_governance table with interconnected data",
+    "num_rows": 4,
+    "size_bytes": 321,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "governance_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "policy_name",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "policy_version",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "effective_date",
+        "type": "DATE",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "review_frequency",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "owner",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.risk_governance",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.risk_governance",
+      "format": "BigQuery TABLE",
+      "size_bytes": 321,
+      "num_rows": 4,
+      "created_at": "2025-10-28T00:15:39.533000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/risk_governance",
+      "schema_name": "banking_dataset",
+      "table_name": "risk_governance",
+      "column_count": 6,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:18:41.635000+00:00",
+      "last_accessed": "2025-10-28T07:10:22.958196",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking risk_governance table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.risk_limits",
+    "name": "risk_limits",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:23.560836",
+    "status": "active",
+    "description": "Banking risk_limits table with interconnected data",
+    "num_rows": 100,
+    "size_bytes": 5573,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "limit_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "limit_type",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "limit_amount",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "current_usage",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "utilization_percent",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "effective_date",
+        "type": "DATE",
+        "mode": "NULLABLE",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.risk_limits",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.risk_limits",
+      "format": "BigQuery TABLE",
+      "size_bytes": 5573,
+      "num_rows": 100,
+      "created_at": "2025-10-28T00:15:36.344000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/risk_limits",
+      "schema_name": "banking_dataset",
+      "table_name": "risk_limits",
+      "column_count": 6,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:18:16.145000+00:00",
+      "last_accessed": "2025-10-28T07:10:23.560943",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking risk_limits table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.risk_metrics",
+    "name": "risk_metrics",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:24.078572",
+    "status": "active",
+    "description": "Banking risk_metrics table with interconnected data",
+    "num_rows": 100,
+    "size_bytes": 6515,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "metric_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "metric_name",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "metric_value",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "measurement_date",
+        "type": "DATE",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "target_value",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "status",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.risk_metrics",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.risk_metrics",
+      "format": "BigQuery TABLE",
+      "size_bytes": 6515,
+      "num_rows": 100,
+      "created_at": "2025-10-28T00:15:38.391000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/risk_metrics",
+      "schema_name": "banking_dataset",
+      "table_name": "risk_metrics",
+      "column_count": 6,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:18:34.328000+00:00",
+      "last_accessed": "2025-10-28T07:10:24.078619",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking risk_metrics table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.risk_mitigation",
+    "name": "risk_mitigation",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:24.566169",
+    "status": "active",
+    "description": "Banking risk_mitigation table with interconnected data",
+    "num_rows": 393,
+    "size_bytes": 37314,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "mitigation_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "risk_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "mitigation_action",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "implementation_date",
+        "type": "DATE",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "effectiveness",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "cost",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.risk_mitigation",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.risk_mitigation",
+      "format": "BigQuery TABLE",
+      "size_bytes": 37314,
+      "num_rows": 393,
+      "created_at": "2025-10-28T00:15:37.305000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/risk_mitigation",
+      "schema_name": "banking_dataset",
+      "table_name": "risk_mitigation",
+      "column_count": 6,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:18:25.045000+00:00",
+      "last_accessed": "2025-10-28T07:10:24.566299",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking risk_mitigation table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.risk_reports",
+    "name": "risk_reports",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:25.058643",
+    "status": "active",
+    "description": "Banking risk_reports table with interconnected data",
+    "num_rows": 50,
+    "size_bytes": 4889,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "report_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "report_type",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "reporting_period",
+        "type": "DATE",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "total_risk_exposure",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "risk_concentration",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "recommendations",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.risk_reports",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.risk_reports",
+      "format": "BigQuery TABLE",
+      "size_bytes": 4889,
+      "num_rows": 50,
+      "created_at": "2025-10-28T00:15:38.871000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/risk_reports",
+      "schema_name": "banking_dataset",
+      "table_name": "risk_reports",
+      "column_count": 6,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:18:37.459000+00:00",
+      "last_accessed": "2025-10-28T07:10:25.058919",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking risk_reports table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.security_events",
+    "name": "security_events",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:25.569199",
+    "status": "active",
+    "description": "Banking security_events table with interconnected data",
+    "num_rows": 0,
+    "size_bytes": 0,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "event_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "event_type",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "severity",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "event_time",
+        "type": "TIMESTAMP",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "user_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "ip_address",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "description",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "action_taken",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.security_events",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.security_events",
+      "format": "BigQuery TABLE",
+      "size_bytes": 0,
+      "num_rows": 0,
+      "created_at": "2025-10-28T00:15:54.894000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/security_events",
+      "schema_name": "banking_dataset",
+      "table_name": "security_events",
+      "column_count": 8,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:15:54.940000+00:00",
+      "last_accessed": "2025-10-28T07:10:25.569331",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking security_events table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.stress_testing",
+    "name": "stress_testing",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:26.084554",
+    "status": "active",
+    "description": "Banking stress_testing table with interconnected data",
+    "num_rows": 50,
+    "size_bytes": 4120,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "test_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "test_name",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "test_date",
+        "type": "DATE",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "scenario",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "impact_amount",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "capital_adequacy",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.stress_testing",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.stress_testing",
+      "format": "BigQuery TABLE",
+      "size_bytes": 4120,
+      "num_rows": 50,
+      "created_at": "2025-10-28T00:15:35.864000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/stress_testing",
+      "schema_name": "banking_dataset",
+      "table_name": "stress_testing",
+      "column_count": 6,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:18:12.399000+00:00",
+      "last_accessed": "2025-10-28T07:10:26.084680",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking stress_testing table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.system_logs",
+    "name": "system_logs",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:26.539208",
+    "status": "active",
+    "description": "Banking system_logs table with interconnected data",
+    "num_rows": 0,
+    "size_bytes": 0,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "log_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "system_name",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "log_level",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "log_message",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "timestamp",
+        "type": "TIMESTAMP",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "user_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "ip_address",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.system_logs",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.system_logs",
+      "format": "BigQuery TABLE",
+      "size_bytes": 0,
+      "num_rows": 0,
+      "created_at": "2025-10-28T00:15:52.963000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/system_logs",
+      "schema_name": "banking_dataset",
+      "table_name": "system_logs",
+      "column_count": 7,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:15:53.004000+00:00",
+      "last_accessed": "2025-10-28T07:10:26.539260",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking system_logs table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.tax_reporting",
+    "name": "tax_reporting",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:27.000723",
+    "status": "active",
+    "description": "Banking tax_reporting table with interconnected data",
+    "num_rows": 5000,
+    "size_bytes": 315000,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "tax_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "customer_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "tax_year",
+        "type": "INTEGER",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "interest_earned",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "dividends",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "capital_gains",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.tax_reporting",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.tax_reporting",
+      "format": "BigQuery TABLE",
+      "size_bytes": 315000,
+      "num_rows": 5000,
+      "created_at": "2025-10-28T00:15:28.330000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/tax_reporting",
+      "schema_name": "banking_dataset",
+      "table_name": "tax_reporting",
+      "column_count": 6,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:17:14.769000+00:00",
+      "last_accessed": "2025-10-28T07:10:27.000885",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking tax_reporting table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.transactions",
+    "name": "transactions",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:27.482855",
+    "status": "active",
+    "description": "Banking transactions table with interconnected data",
+    "num_rows": 10000,
+    "size_bytes": 1128197,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "transaction_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "account_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "customer_id",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "transaction_type",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "amount",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "description",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "transaction_date",
+        "type": "DATETIME",
+        "mode": "NULLABLE",
+        "description": ""
+      },
+      {
+        "name": "status",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.transactions",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.transactions",
+      "format": "BigQuery TABLE",
+      "size_bytes": 1128197,
+      "num_rows": 10000,
+      "created_at": "2025-10-28T00:15:20.113000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/transactions",
+      "schema_name": "banking_dataset",
+      "table_name": "transactions",
+      "column_count": 8,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:16:10.846000+00:00",
+      "last_accessed": "2025-10-28T07:10:27.483273",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking transactions table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
+  },
+  {
+    "id": "single-clock-476523-g7.banking_dataset.wire_transfers",
+    "name": "wire_transfers",
+    "type": "Table",
+    "catalog": "single-clock-476523-g7.banking_dataset",
+    "discovered_at": "2025-10-28T07:10:27.951021",
+    "status": "active",
+    "description": "Banking wire_transfers table with interconnected data",
+    "num_rows": 0,
+    "size_bytes": 0,
+    "connector_id": "bq_single-clock-476523-g7_1761615591.191538",
+    "columns": [
+      {
+        "name": "transfer_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "sender_account_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "receiver_account_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "amount",
+        "type": "FLOAT",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "currency",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "transfer_date",
+        "type": "TIMESTAMP",
+        "mode": "REQUIRED",
+        "description": ""
+      },
+      {
+        "name": "status",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": ""
+      }
+    ],
+    "technical_metadata": {
+      "asset_id": "single-clock-476523-g7.banking_dataset.wire_transfers",
+      "asset_type": "Table",
+      "location": "US - single-clock-476523-g7.banking_dataset.wire_transfers",
+      "format": "BigQuery TABLE",
+      "size_bytes": 0,
+      "num_rows": 0,
+      "created_at": "2025-10-28T00:15:50.002000+00:00",
+      "source_system": "BigQuery",
+      "storage_location": "single-clock-476523-g7/banking_dataset/wire_transfers",
+      "schema_name": "banking_dataset",
+      "table_name": "wire_transfers",
+      "column_count": 7,
+      "partitioning_strategy": "None",
+      "clustering_fields": "None"
+    },
+    "operational_metadata": {
+      "status": "active",
+      "owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "last_modified": "2025-10-28T00:15:50.058000+00:00",
+      "last_accessed": "2025-10-28T07:10:27.951206",
+      "access_count": "N/A",
+      "data_quality_score": 95
+    },
+    "business_metadata": {
+      "description": "Banking wire_transfers table with interconnected data",
+      "business_owner": "torrotest@single-clock-476523-g7.iam.gserviceaccount.com",
+      "department": "banking_dataset",
+      "classification": "internal",
+      "sensitivity_level": "low",
+      "tags": []
+    }
   }
 ]

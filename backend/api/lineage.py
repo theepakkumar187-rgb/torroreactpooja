@@ -288,10 +288,14 @@ async def get_data_lineage(
     Supports pagination for large graphs.
     """
     try:
-        from main import discovered_assets, active_connectors
+        from main import active_connectors, load_assets
+        
+        # Reload assets from file to get latest data
+        discovered_assets = load_assets()
         
         print(f"DEBUG: Analyzing lineage for {len(discovered_assets)} assets")
         print(f"DEBUG: Active connectors: {len(active_connectors)}")
+        print(f"DEBUG: Active connector IDs: {[conn['id'] for conn in active_connectors]}")
         
         nodes = []
         edges = []
@@ -304,12 +308,14 @@ async def get_data_lineage(
         
         # Build asset map - ONLY for assets from active connectors
         asset_map = {}
+        filtered_count = 0
         for asset in discovered_assets:
             asset_connector_id = asset.get('connector_id', '')
             
             # Filter out assets from deleted connectors
             if asset_connector_id not in active_connector_ids:
                 print(f"DEBUG: Skipping asset {asset.get('id')} from deleted connector {asset_connector_id}")
+                filtered_count += 1
                 continue
                 
             if asset.get('type') in ['Table', 'View']:
@@ -335,6 +341,7 @@ async def get_data_lineage(
                 asset_map[asset_id] = asset
         
         print(f"DEBUG: Found {len(nodes)} table/view nodes")
+        print(f"DEBUG: Filtered out {filtered_count} assets from deleted connectors")
         
         # Strategy 1: Analyze Views for SQL-based lineage
         for asset in discovered_assets:
@@ -547,7 +554,10 @@ async def get_impact_analysis(asset_id: str):
     Shows upstream and downstream impacts.
     """
     try:
-        from main import discovered_assets, active_connectors
+        from main import active_connectors, load_assets
+        
+        # Reload assets from file to get latest data
+        discovered_assets = load_assets()
         
         # Get full lineage (with default params)
         lineage_response = await get_data_lineage(page=0, page_size=1000)
@@ -589,7 +599,10 @@ async def export_lineage(
     Export lineage data in various formats.
     """
     try:
-        from main import discovered_assets, active_connectors
+        from main import active_connectors, load_assets
+        
+        # Reload assets from file to get latest data
+        discovered_assets = load_assets()
         
         # Get lineage data
         lineage_result = await get_data_lineage()
@@ -709,7 +722,10 @@ async def check_lineage_health():
     Check lineage health - detect broken relationships, missing assets, and validation issues.
     """
     try:
-        from main import discovered_assets, active_connectors
+        from main import active_connectors, load_assets
+        
+        # Reload assets from file to get latest data
+        discovered_assets = load_assets()
         
         lineage_result = await get_data_lineage(page=0, page_size=1000)
         
@@ -785,7 +801,10 @@ async def get_asset_lineage(asset_id: str):
     Get column-level lineage for a specific asset (upstream and downstream).
     """
     try:
-        from main import discovered_assets
+        from main import load_assets
+        
+        # Reload assets from file to get latest data
+        discovered_assets = load_assets()
         
         asset = next((a for a in discovered_assets if a['id'] == asset_id), None)
         if not asset:
