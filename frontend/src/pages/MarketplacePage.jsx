@@ -85,6 +85,10 @@ const MarketplacePage = () => {
   const [sqlDialogOpen, setSqlDialogOpen] = useState(false);
   const [sqlCommands, setSqlCommands] = useState([]);
   const [billingInfo, setBillingInfo] = useState({ requiresBilling: false, message: '' });
+  const [maskedViewSQL, setMaskedViewSQL] = useState('');
+  const [maskedViewCreated, setMaskedViewCreated] = useState(false);
+  const [maskedViewName, setMaskedViewName] = useState('');
+  const [maskedViewError, setMaskedViewError] = useState('');
   const [recommendedTagsDialogOpen, setRecommendedTagsDialogOpen] = useState(false);
   const [recommendedTags, setRecommendedTags] = useState({});
   const [existingTags, setExistingTags] = useState([]);
@@ -387,7 +391,7 @@ const MarketplacePage = () => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(publishData),
-          signal: AbortSignal.timeout(120000), // 120 second timeout (2 minutes)
+          signal: AbortSignal.timeout(300000), // 5 minute timeout for Starburst API lookup
         });
         console.log('📥 Starburst API response received');
       } else if (resourceType === 'Azure Purview') {
@@ -400,12 +404,30 @@ const MarketplacePage = () => {
       if (!response.ok) {
         // Try to get the detailed error message from the backend
         let errorMessage = `Failed to publish tags to ${resourceType}`;
+        let detailedError = null;
+        
         try {
           const errorData = await response.json();
           errorMessage = errorData.detail || errorData.message || errorMessage;
+          
+          // For Starburst, check if it's a table not found error
+          if (resourceType === 'Starburst Galaxy' && response.status === 404) {
+            detailedError = errorData.detail || errorMessage;
+          }
         } catch (e) {
           errorMessage = `HTTP ${response.status}: ${response.statusText}`;
         }
+        
+        // For Starburst 404 errors, show the detailed error dialog
+        if (resourceType === 'Starburst Galaxy' && response.status === 404 && detailedError) {
+          setBillingInfo({
+            requiresBilling: false,
+            message: detailedError
+          });
+          setSqlDialogOpen(true);
+          return; // Don't throw error, just show the dialog
+        }
+        
         throw new Error(errorMessage);
       }
 
@@ -425,6 +447,13 @@ const MarketplacePage = () => {
         console.log('🎉 Tags published successfully! Opening SQL dialog...');
         // Handle success case
         setSqlCommands(result.sqlCommands || []);
+        
+        // Store masked view information
+        setMaskedViewSQL(result.maskedViewSQL || '');
+        setMaskedViewCreated(result.maskedViewCreated || false);
+        setMaskedViewName(result.maskedViewName || '');
+        setMaskedViewError(result.maskedViewError || '');
+        
         setBillingInfo({
           requiresBilling: result.requiresBilling || false,
           message: result.billingMessage || 'Operation completed successfully.'
@@ -436,11 +465,11 @@ const MarketplacePage = () => {
       
       // Handle timeout errors
       if (err.name === 'TimeoutError' || err.message.includes('timeout')) {
-        setSnackbarMessage('Publishing timed out after 2 minutes. Please check your catalog/schema/table names and try again.');
+        setSnackbarMessage('Publishing timed out after 5 minutes. Please check your catalog/schema/table names and try again.');
         setSqlDialogOpen(true);
         setBillingInfo({
           requiresBilling: false,
-          message: '❌ Publishing timed out after 2 minutes. This usually means:\n\n1. The catalog/schema/table names are incorrect\n2. The Starburst API is slow or unresponsive\n3. You have too many catalogs/schemas/tables to search through\n\nPlease verify your catalog, schema, and table names are correct and try again.'
+          message: '❌ Publishing timed out after 5 minutes. This usually means:\n\n1. The catalog/schema/table names are incorrect\n2. The Starburst API is slow or unresponsive\n3. Network connectivity issues\n4. The table lookup is taking too long\n\nPlease verify your catalog, schema, and table names are correct and try again.'
         });
       } else {
         setSnackbarMessage(`Failed to publish tags: ${err.message}`);
@@ -767,6 +796,17 @@ const MarketplacePage = () => {
               />
             </RadioGroup>
           </FormControl>
+
+          {/* Helpful Info for Starburst */}
+          {resourceType === 'Starburst Galaxy' && (
+            <Alert severity="info" sx={{ mb: 3 }}>
+              <Typography variant="body2">
+                <strong>💡 Tip:</strong> Make sure your catalog, schema, and table names are correct. 
+                You can find these by running discovery first, or check your Starburst Galaxy console. 
+                The table must exist in Starburst Galaxy for tagging to work.
+              </Typography>
+            </Alert>
+          )}
 
           {/* Data Asset Details */}
           <Grid container spacing={3} sx={{ mb: 4 }}>
@@ -1164,12 +1204,33 @@ const MarketplacePage = () => {
             )}
           </Grid>
 
-          {/* Action Button */}
+          {/* Action Buttons */}
           <Box sx={{ 
             display: 'flex', 
-            justifyContent: 'flex-end', 
+            justifyContent: 'space-between', 
             alignItems: 'center' 
           }}>
+            {resourceType === 'Starburst Galaxy' && (
+              <Button
+                variant="text"
+                startIcon={<Search />}
+                onClick={() => {
+                  setSnackbarMessage('💡 To find available tables, go to the Discovery page and run discovery first, or check your Starburst Galaxy console.');
+                  setSnackbarOpen(true);
+                }}
+                sx={{
+                  color: '#1976d2',
+                  fontWeight: 500,
+                  textTransform: 'none',
+                  '&:hover': {
+                    backgroundColor: 'rgba(25, 118, 210, 0.04)',
+                  },
+                }}
+              >
+                How to find tables?
+              </Button>
+            )}
+            
             <Button
               variant="outlined"
               startIcon={loading ? <CircularProgress size={20} /> : <Search />}
@@ -1896,6 +1957,81 @@ const MarketplacePage = () => {
                     {billingInfo.message || 'No log message available. Check the backend logs for details.'}
                   </Typography>
                 </Alert>
+
+                {/* Show masked view information for Starburst */}
+                {resourceType === 'Starburst Galaxy' && maskedViewSQL && (
+                  <Box sx={{ mt: 3 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+                      🔒 Masked View Information:
+                    </Typography>
+                    {maskedViewCreated ? (
+                      <Alert severity="success" sx={{ mb: 2 }}>
+                        <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
+                          ✅ Masked view created successfully!
+                        </Typography>
+                        <Typography variant="body2">
+                          View Name: <strong>{maskedViewName}</strong>
+                        </Typography>
+                        <Typography variant="body2" sx={{ mt: 1, mb: 1 }}>
+                          The masked view applies different masking levels based on PII sensitivity:
+                        </Typography>
+                        <Box sx={{ ml: 2 }}>
+                          <Typography variant="body2" sx={{ fontSize: '0.875rem' }}>
+                            • <strong>CRITICAL PII</strong>: Fully masked (***FULLY_MASKED***)
+                          </Typography>
+                          <Typography variant="body2" sx={{ fontSize: '0.875rem' }}>
+                            • <strong>HIGH PII</strong>: Strong masking (partial info shown)
+                          </Typography>
+                          <Typography variant="body2" sx={{ fontSize: '0.875rem' }}>
+                            • <strong>MEDIUM PII</strong>: Partial masking (some structure preserved)
+                          </Typography>
+                          <Typography variant="body2" sx={{ fontSize: '0.875rem' }}>
+                            • <strong>LOW PII</strong>: Light masking (most data visible)
+                          </Typography>
+                        </Box>
+                      </Alert>
+                    ) : maskedViewError ? (
+                      <Alert severity="warning" sx={{ mb: 2 }}>
+                        <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
+                          ⚠️ Masked view creation failed
+                        </Typography>
+                        <Typography variant="body2" sx={{ mb: 1 }}>
+                          Error: {maskedViewError}
+                        </Typography>
+                        <Typography variant="body2" sx={{ mb: 1 }}>
+                          Different masking levels will be applied based on PII sensitivity.
+                        </Typography>
+                        <Typography variant="body2">
+                          You can manually execute the SQL below to create the masked view.
+                        </Typography>
+                      </Alert>
+                    ) : (
+                      <Alert severity="info" sx={{ mb: 2 }}>
+                        <Typography variant="body2" sx={{ mb: 1 }}>
+                          Masked view SQL generated with different masking levels based on PII sensitivity.
+                        </Typography>
+                        <Typography variant="body2">
+                          You can execute it manually to create the view.
+                        </Typography>
+                      </Alert>
+                    )}
+                    
+                    <Paper sx={{ p: 2, backgroundColor: '#f5f5f5', maxHeight: '300px', overflow: 'auto', mt: 2 }}>
+                      <Typography variant="body2" component="pre" sx={{ 
+                        fontFamily: 'monospace', 
+                        fontSize: '0.875rem',
+                        whiteSpace: 'pre-wrap',
+                        wordBreak: 'break-word',
+                        backgroundColor: 'white',
+                        p: 2,
+                        borderRadius: 1,
+                        border: '1px solid #e0e0e0'
+                      }}>
+                        {maskedViewSQL}
+                      </Typography>
+                    </Paper>
+                  </Box>
+                )}
 
                 {/* Show SQL commands if available */}
                 {sqlCommands.length > 0 && (

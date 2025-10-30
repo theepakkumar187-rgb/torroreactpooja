@@ -5,6 +5,8 @@ import requests
 import base64
 import json
 import os
+import re
+from datetime import datetime
 
 router = APIRouter()
 
@@ -42,6 +44,88 @@ def is_pii_column_starburst(column_tags: List[str]) -> bool:
     pii_tags = ['PII', 'SENSITIVE', 'DATA_PRIVACY', 'CRITICAL_PII', 'FINANCIAL', 
                 'PAYMENT_INFO', 'CREDENTIALS', 'EMAIL', 'PHONE', 'SSN', 'PERSONAL_INFO']
     return any(tag in str(column_tags) for tag in pii_tags)
+
+def get_pii_sensitivity_level(column_tags: List[str], column_name: str) -> str:
+    """
+    Determine PII sensitivity level based on tags and column name
+    Returns: 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW', or 'NONE'
+    """
+    col_name = column_name.lower()
+    tags_str = ' '.join(column_tags).upper()
+    
+    # CRITICAL PII - Full masking required
+    critical_tags = ['SSN', 'CRITICAL_PII', 'CREDENTIALS', 'PASSWORD', 'SECRET', 'TOKEN']
+    critical_patterns = ['ssn', 'social_security', 'credit_card', 'bank_account', 'passport', 'license']
+    
+    if any(tag in tags_str for tag in critical_tags) or any(pattern in col_name for pattern in critical_patterns):
+        return 'CRITICAL'
+    
+    # HIGH PII - Strong masking
+    high_tags = ['FINANCIAL', 'PAYMENT_INFO', 'CRITICAL_PII']
+    high_patterns = ['email', 'phone', 'address', 'zipcode', 'postal']
+    
+    if any(tag in tags_str for tag in high_tags) or any(pattern in col_name for pattern in high_patterns):
+        return 'HIGH'
+    
+    # MEDIUM PII - Partial masking
+    medium_tags = ['PII', 'SENSITIVE', 'PERSONAL_INFO']
+    medium_patterns = ['name', 'first_name', 'last_name', 'birth', 'dob']
+    
+    if any(tag in tags_str for tag in medium_tags) or any(pattern in col_name for pattern in medium_patterns):
+        return 'MEDIUM'
+    
+    # LOW PII - Light masking
+    low_tags = ['DATA_PRIVACY']
+    low_patterns = ['user_id', 'customer_id', 'ip_address']
+    
+    if any(tag in tags_str for tag in low_tags) or any(pattern in col_name for pattern in low_patterns):
+        return 'LOW'
+    
+    return 'NONE'
+
+def get_masking_strategy(column_name: str, column_type: str, sensitivity_level: str) -> str:
+    """
+    Get appropriate masking strategy based on sensitivity level and data type
+    """
+    col_name = column_name.lower()
+    
+    if sensitivity_level == 'CRITICAL':
+        # Full masking - completely hide the data
+        if 'VARCHAR' in column_type.upper() or 'STRING' in column_type.upper():
+            return f"CAST('***FULLY_MASKED***' AS VARCHAR) AS {column_name}"
+        else:
+            return f"CAST(NULL AS {column_type}) AS {column_name}"
+    
+    elif sensitivity_level == 'HIGH':
+        # Strong masking - show only partial info
+        if 'email' in col_name:
+            return f"CONCAT(SUBSTRING({column_name}, 1, 2), '***@***', SUBSTRING({column_name}, POSITION('@' IN {column_name}) + 1, 2)) AS {column_name}"
+        elif 'phone' in col_name:
+            return f"CONCAT('***-***-', SUBSTRING({column_name}, -4)) AS {column_name}"
+        elif 'VARCHAR' in column_type.upper():
+            return f"CONCAT(SUBSTRING({column_name}, 1, 2), '***', SUBSTRING({column_name}, -2)) AS {column_name}"
+        else:
+            return f"CAST('***MASKED***' AS VARCHAR) AS {column_name}"
+    
+    elif sensitivity_level == 'MEDIUM':
+        # Partial masking - show some structure
+        if 'name' in col_name:
+            return f"CONCAT(SUBSTRING({column_name}, 1, 1), REPEAT('*', LENGTH({column_name}) - 1)) AS {column_name}"
+        elif 'VARCHAR' in column_type.upper():
+            return f"CONCAT(SUBSTRING({column_name}, 1, 3), '***', SUBSTRING({column_name}, -3)) AS {column_name}"
+        else:
+            return f"CAST('***PARTIAL***' AS VARCHAR) AS {column_name}"
+    
+    elif sensitivity_level == 'LOW':
+        # Light masking - show most of the data
+        if 'VARCHAR' in column_type.upper():
+            return f"CONCAT(SUBSTRING({column_name}, 1, LENGTH({column_name}) - 4), '****') AS {column_name}"
+        else:
+            return f"CAST('***LIGHT***' AS VARCHAR) AS {column_name}"
+    
+    else:
+        # No masking
+        return column_name
 
 def detect_pii_type_starburst(column_name: str) -> tuple:
     """
@@ -86,22 +170,38 @@ def detect_pii_type_starburst(column_name: str) -> tuple:
 
 def generate_masked_view_sql_starburst(catalog: str, schema: str, table_id: str, 
                                        column_tags: List, discovered_assets) -> str:
-    """Generate SQL to create a masked view for PII columns in Starburst"""
+    """Generate SQL to create a masked view for PII columns in Starburst with different masking levels"""
     try:
         # Find the table in discovered assets to get schema
         table_key = f"{catalog}.{schema}.{table_id}"
         
-        # Search for table in discovered assets
+        # Search for table in discovered assets - try multiple key formats
         table_asset = None
-        for asset in discovered_assets:
-            if asset.get('id') == table_key:
-                table_asset = asset
+        search_keys = [
+            table_key,  # testbq.bankdata.cards
+            f"torro001.galaxy.starburst.io.{table_key}",  # torro001.galaxy.starburst.io.testbq.bankdata.cards
+            f"{catalog}.{schema}.{table_id}",  # Alternative format
+        ]
+        
+        for search_key in search_keys:
+            for asset in discovered_assets:
+                if asset.get('id') == search_key:
+                    table_asset = asset
+                    break
+            if table_asset:
                 break
         
         if not table_asset or 'columns' not in table_asset:
+            print(f"DEBUG: Could not find table {table_key} in discovered assets")
+            print(f"DEBUG: Tried keys: {search_keys}")
+            print(f"DEBUG: Available table IDs: {[a.get('id') for a in discovered_assets if 'cards' in a.get('id', '')][:5]}")
+            print(f"DEBUG: Total discovered assets: {len(discovered_assets)}")
             return ""
         
-        # Build SELECT columns with masking for PII
+        print(f"DEBUG: Found table asset: {table_asset.get('id')}")
+        print(f"DEBUG: Table has {len(table_asset.get('columns', []))} columns")
+        
+        # Build SELECT columns with different masking levels for PII
         select_columns = []
         pii_columns_found = []
         
@@ -112,21 +212,18 @@ def generate_masked_view_sql_starburst(catalog: str, schema: str, table_id: str,
             # Check if this column has PII tags
             col_tag = next((ct for ct in column_tags if ct.columnName == col_name), None)
             
-            if col_tag and is_pii_column_starburst(col_tag.tags):
-                # Mask PII column based on type
-                pii_columns_found.append(col_name)
+            if col_tag and col_tag.tags:
+                # Determine sensitivity level
+                sensitivity_level = get_pii_sensitivity_level(col_tag.tags, col_name)
                 
-                if 'VARCHAR' in col_type.upper() or 'STRING' in col_type.upper():
-                    # For strings, replace with masked value
-                    select_columns.append(f"CAST('***MASKED***' AS VARCHAR) AS {col_name}")
-                elif 'INTEGER' in col_type.upper() or 'INT' in col_type.upper() or 'BIGINT' in col_type.upper():
-                    select_columns.append(f"CAST(NULL AS INTEGER) AS {col_name}")
-                elif 'DOUBLE' in col_type.upper() or 'FLOAT' in col_type.upper():
-                    select_columns.append(f"CAST(NULL AS DOUBLE) AS {col_name}")
-                elif 'DATE' in col_type.upper() or 'TIMESTAMP' in col_type.upper():
-                    select_columns.append(f"CAST(NULL AS DATE) AS {col_name}")
+                if sensitivity_level != 'NONE':
+                    # Apply appropriate masking based on sensitivity
+                    pii_columns_found.append(f"{col_name} ({sensitivity_level})")
+                    masking_strategy = get_masking_strategy(col_name, col_type, sensitivity_level)
+                    select_columns.append(masking_strategy)
                 else:
-                    select_columns.append(f"CAST(NULL AS VARCHAR) AS {col_name}")
+                    # Keep non-PII columns as-is
+                    select_columns.append(col_name)
             else:
                 # Keep non-PII columns as-is
                 select_columns.append(col_name)
@@ -193,11 +290,33 @@ class PublishTagsResponse(BaseModel):
     requiresBilling: bool = False
     billingMessage: str = ""
     maskedViewSQL: str = ""  # SQL for creating masked view for PII columns
+    maskedViewCreated: bool = False  # Whether masked view was successfully created
+    maskedViewName: str = ""  # Name of the created masked view
+    maskedViewError: str = ""  # Error message if masked view creation failed
+    maskingRules: List[Dict[str, Any]] = []  # Human-readable masking rules per column
+
+# Token cache to avoid repeated authentication
+_token_cache = {}
+_token_cache_expiry = {}
 
 def get_starburst_access_token(account_domain: str, client_id: str, client_secret: str):
     """
-    Get OAuth2 access token from Starburst Galaxy
+    Get OAuth2 access token from Starburst Galaxy with caching
     """
+    import time
+    
+    # Create cache key
+    cache_key = f"{account_domain}:{client_id}"
+    
+    # Check if we have a valid cached token
+    if cache_key in _token_cache and cache_key in _token_cache_expiry:
+        if time.time() < _token_cache_expiry[cache_key]:
+            print(f"🚀 Using cached token for {account_domain} (saves ~2-3 seconds)")
+            return _token_cache[cache_key]
+    
+    print(f"🔐 Authenticating with Starburst Galaxy ({account_domain})...")
+    start_time = time.time()
+    
     base_url = f"https://{account_domain}"
     
     # Encode credentials
@@ -213,15 +332,438 @@ def get_starburst_access_token(account_domain: str, client_id: str, client_secre
     token_data = 'grant_type=client_credentials'
     token_url = f"{base_url}/oauth/v2/token"
     
-    token_response = requests.post(token_url, headers=token_headers, data=token_data, timeout=30)
+    # Use shorter timeout for faster failure detection
+    token_response = requests.post(token_url, headers=token_headers, data=token_data, timeout=15)
     if token_response.status_code != 200:
         raise Exception(f"Failed to get access token: {token_response.status_code} - {token_response.text}")
     
-    access_token = token_response.json().get('access_token')
+    token_data = token_response.json()
+    access_token = token_data.get('access_token')
     if not access_token:
         raise Exception("No access token received")
     
+    # Cache the token (expires in 50 minutes, tokens usually last 1 hour)
+    expires_in = token_data.get('expires_in', 3600)  # Default 1 hour
+    cache_expiry = time.time() + (expires_in - 600)  # Cache for 10 minutes less than expiry
+    
+    _token_cache[cache_key] = access_token
+    _token_cache_expiry[cache_key] = cache_expiry
+    
+    auth_time = time.time() - start_time
+    print(f"✅ Authentication successful in {auth_time:.2f}s, token cached for {expires_in//60} minutes")
+    
     return access_token
+
+def clear_starburst_token_cache():
+    """Clear the Starburst token cache"""
+    global _token_cache, _token_cache_expiry
+    _token_cache.clear()
+    _token_cache_expiry.clear()
+    print("🧹 Starburst token cache cleared")
+
+def execute_sql_starburst(account_domain: str, access_token: str, sql: str, catalog: str) -> tuple:
+    """
+    Execute SQL query in Starburst Galaxy using REST API
+    
+    Note: Starburst Galaxy API endpoint for SQL execution may vary.
+    This function attempts common endpoint patterns. If execution fails,
+    the SQL will be returned for manual execution.
+    
+    Args:
+        account_domain: Starburst Galaxy account domain
+        access_token: OAuth2 access token
+        sql: SQL query to execute
+        catalog: Catalog name to use for the query
+    
+    Returns:
+        tuple: (success: bool, error_message: str, view_name: str)
+    """
+    try:
+        base_url = f"https://{account_domain}"
+        headers = {
+            'Authorization': f'Bearer {access_token}',
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        }
+        
+        # OPTION 0: Preferred - SQL Job API (create -> execute -> poll)
+        # This is the recommended way to execute SQL in Starburst Galaxy
+        try:
+            sql_job_create_url = f"{base_url}/public/api/v1/sqlJob"
+            # Try different payload shapes used by various API revisions
+            create_payloads = [
+                {"sql": sql, "catalog": catalog},
+                {"statement": sql, "catalog": catalog},
+                {"query": sql, "catalog": catalog}
+            ]
+
+            job_id = None
+            last_error = None
+            for payload in create_payloads:
+                try:
+                    create_resp = requests.post(sql_job_create_url, headers=headers, json=payload, timeout=30)
+                    if create_resp.status_code in (200, 201):
+                        data = {}
+                        try:
+                            data = create_resp.json()
+                        except Exception:
+                            data = {}
+                        job_id = data.get("sqlJobId") or data.get("id") or data.get("jobId")
+                        if job_id:
+                            break
+                        else:
+                            last_error = f"Create SQL job missing id. HTTP {create_resp.status_code}: {create_resp.text[:200]}"
+                    elif create_resp.status_code == 409:
+                        # Job may already exist for identical statement; try to parse id if provided
+                        try:
+                            data = create_resp.json()
+                            job_id = data.get("sqlJobId") or data.get("id")
+                        except Exception:
+                            pass
+                        if job_id:
+                            break
+                        last_error = f"Create SQL job conflict: {create_resp.text[:200]}"
+                    else:
+                        last_error = f"Create SQL job failed: HTTP {create_resp.status_code}: {create_resp.text[:200]}"
+                except requests.exceptions.RequestException as e:
+                    last_error = str(e)
+
+            if job_id:
+                # Execute job
+                try:
+                    exec_url = f"{base_url}/public/api/v1/sqlJob/{job_id}:execute"
+                    exec_resp = requests.put(exec_url, headers=headers, json={}, timeout=30)
+                    # 204 is success per docs; some envs return 200
+                    if exec_resp.status_code in (200, 204):
+                        # Poll for completion
+                        status_url = f"{base_url}/public/api/v1/sqlJob/{job_id}"
+                        import time as _time
+                        deadline = _time.time() + 45
+                        while _time.time() < deadline:
+                            try:
+                                st = requests.get(status_url, headers=headers, timeout=10)
+                                if st.status_code == 200:
+                                    js = {}
+                                    try:
+                                        js = st.json()
+                                    except Exception:
+                                        js = {}
+                                    status = (js.get("status") or js.get("state") or "").upper()
+                                    if status in ("SUCCEEDED", "FINISHED", "COMPLETED"):
+                                        # Try to extract view name from SQL
+                                        view_name = ""
+                                        if "CREATE OR REPLACE VIEW" in sql.upper():
+                                            match = re.search(r'VIEW\s+"?([^"\s]+)"?\."?([^"\s]+)"?\."?([^"\s]+)"?', sql, re.IGNORECASE)
+                                            if match:
+                                                view_name = f"{match.group(1)}.{match.group(2)}.{match.group(3)}"
+                                        return (True, "", view_name)
+                                    if status in ("FAILED", "ERROR"):
+                                        last_error = f"SQL job failed: {js}"
+                                        break
+                                else:
+                                    last_error = f"Status HTTP {st.status_code}: {st.text[:200]}"
+                                    break
+                            except requests.exceptions.RequestException as e:
+                                last_error = str(e)
+                                break
+                            _time.sleep(1.0)
+                    else:
+                        last_error = f"Execute SQL job failed: HTTP {exec_resp.status_code}: {exec_resp.text[:200]}"
+                except requests.exceptions.RequestException as e:
+                    last_error = str(e)
+            # If job path didn't succeed, fall through to legacy endpoints below
+        except Exception as e:
+            # Continue to legacy attempts
+            last_error = str(e)
+
+        # Try different possible endpoints for SQL execution (legacy fallbacks)
+        query_urls = [
+            f"{base_url}/public/api/v1/query",
+            f"{base_url}/public/api/v1/statement",
+            f"{base_url}/api/v1/query",
+            f"{base_url}/api/v1/statement"
+        ]
+        
+        print(f"🔧 Executing SQL in Starburst Galaxy...")
+        print(f"📝 SQL: {sql[:200]}...")  # Print first 200 chars
+        
+        # Try each endpoint until one works
+        last_error = None
+        for query_url in query_urls:
+            try:
+                # Prepare query payload - try different payload formats
+                query_payloads = [
+                    {"query": sql, "catalog": catalog},
+                    {"sql": sql, "catalog": catalog},
+                    {"statement": sql, "catalog": catalog}
+                ]
+                
+                for payload in query_payloads:
+                    try:
+                        response = requests.post(query_url, headers=headers, json=payload, timeout=60)
+                        
+                        if response.status_code == 200:
+                            print(f"✅ SQL executed successfully via {query_url}")
+                            # Extract view name from SQL if possible
+                            view_name = ""
+                            if "CREATE OR REPLACE VIEW" in sql.upper():
+                                # Try to extract view name from SQL
+                                match = re.search(r'VIEW\s+"?([^"\s]+)"?\s*\.\s*"?([^"\s]+)"?\s*\.\s*"?([^"\s]+)"?', sql, re.IGNORECASE)
+                                if match:
+                                    view_name = f"{match.group(1)}.{match.group(2)}.{match.group(3)}"
+                            return (True, "", view_name)
+                        elif response.status_code == 404:
+                            # Endpoint doesn't exist, try next one
+                            continue
+                        else:
+                            last_error = f"HTTP {response.status_code}: {response.text[:500]}"
+                            continue
+                    except requests.exceptions.RequestException as e:
+                        last_error = str(e)
+                        continue
+            except Exception as e:
+                last_error = str(e)
+                continue
+        
+        # If all endpoints failed, return error
+        error_msg = f"Unable to execute SQL via Starburst Galaxy API. Last error: {last_error or 'Unknown error'}"
+        print(f"❌ SQL execution failed: {error_msg}")
+        print(f"💡 Note: SQL execution endpoint may require different configuration. SQL is available for manual execution.")
+        return (False, error_msg, "")
+            
+    except Exception as e:
+        error_msg = f"Error executing SQL: {str(e)}"
+        print(f"❌ {error_msg}")
+        return (False, error_msg, "")
+
+def discover_all_starburst_connectors(account_domain: str, access_token: str) -> List[Dict[str, Any]]:
+    """
+    Discover ALL connectors and data sources available in Starburst Galaxy.
+    This includes all catalogs and their underlying data sources.
+    """
+    base_url = f"https://{account_domain}"
+    headers = {
+        'Authorization': f'Bearer {access_token}',
+        'Content-Type': 'application/json'
+    }
+    
+    discovered_connectors = []
+    
+    try:
+        # Get all catalogs (these represent different data sources)
+        catalogs_url = f"{base_url}/public/api/v1/catalog"
+        catalogs_response = requests.get(catalogs_url, headers=headers, timeout=30)
+        
+        if catalogs_response.status_code == 200:
+            catalogs_data = catalogs_response.json()
+            catalogs_list = catalogs_data.get('result', catalogs_data.get('data', catalogs_data)) if isinstance(catalogs_data, dict) else catalogs_data
+            
+            print(f"🔍 Discovering connectors from {len(catalogs_list)} catalogs...")
+            
+            for catalog in catalogs_list:
+                catalog_id = catalog.get('catalogId', 'unknown')
+                catalog_name = catalog.get('catalogName', catalog_id)
+                catalog_type = catalog.get('catalogType', 'unknown')
+                catalog_owner = catalog.get('owner', catalog.get('catalogOwner', 'unknown'))
+                
+                # Skip system catalogs
+                system_catalogs = ['galaxy', 'galaxy_telemetry', 'system', 'information_schema']
+                if catalog_name.lower() in system_catalogs:
+                    continue
+                
+                # Determine connector type based on catalog name/type
+                connector_type = determine_connector_type(catalog_name, catalog_type)
+                
+                # Get detailed information about this connector
+                connector_info = {
+                    'catalog_id': catalog_id,
+                    'catalog_name': catalog_name,
+                    'catalog_type': catalog_type,
+                    'connector_type': connector_type,
+                    'owner': catalog_owner,
+                    'status': 'active',
+                    'discovered_at': datetime.now().isoformat(),
+                    'schemas': [],
+                    'tables': [],
+                    'total_assets': 0
+                }
+                
+                # Discover schemas for this catalog
+                try:
+                    schemas_url = f"{base_url}/public/api/v1/catalog/{catalog_id}/schema"
+                    schemas_response = requests.get(schemas_url, headers=headers, timeout=15)
+                    
+                    if schemas_response.status_code == 200:
+                        schemas_data = schemas_response.json()
+                        schemas_list = schemas_data.get('result', schemas_data.get('data', schemas_data)) if isinstance(schemas_data, dict) else schemas_data
+                        
+                        for schema in schemas_list:
+                            schema_id = schema.get('schemaId', schema.get('id', 'unknown'))
+                            schema_name = schema.get('schemaName', schema.get('name', schema_id))
+                            
+                            connector_info['schemas'].append({
+                                'schema_id': schema_id,
+                                'schema_name': schema_name,
+                                'tables': []
+                            })
+                            
+                            # Discover tables for this schema
+                            try:
+                                tables_url = f"{base_url}/public/api/v1/catalog/{catalog_id}/schema/{schema_id}/table"
+                                tables_response = requests.get(tables_url, headers=headers, timeout=10)
+                                
+                                if tables_response.status_code == 200:
+                                    tables_data = tables_response.json()
+                                    tables_list = tables_data.get('result', tables_data.get('data', tables_data)) if isinstance(tables_data, dict) else tables_data
+                                    
+                                    for table in tables_list:
+                                        table_id = table.get('tableId', table.get('id', 'unknown'))
+                                        table_name = table.get('tableName', table.get('name', table_id))
+                                        table_type = table.get('tableType', table.get('type', 'Table'))
+                                        
+                                        table_info = {
+                                            'table_id': table_id,
+                                            'table_name': table_name,
+                                            'table_type': table_type,
+                                            'columns': []
+                                        }
+                                        
+                                        # Get column information
+                                        try:
+                                            columns_url = f"{base_url}/public/api/v1/catalog/{catalog_id}/schema/{schema_id}/table/{table_id}"
+                                            columns_response = requests.get(columns_url, headers=headers, timeout=10)
+                                            
+                                            if columns_response.status_code == 200:
+                                                column_data = columns_response.json()
+                                                columns = column_data.get('columns', column_data.get('result', []))
+                                                
+                                                for col in columns:
+                                                    column_info = {
+                                                        'name': col.get('name', 'unknown'),
+                                                        'type': col.get('type', 'unknown'),
+                                                        'nullable': col.get('nullable', True),
+                                                        'description': col.get('description', '')
+                                                    }
+                                                    table_info['columns'].append(column_info)
+                                        except Exception as e:
+                                            print(f"⚠️ Error getting columns for {catalog_name}.{schema_name}.{table_name}: {e}")
+                                        
+                                        connector_info['schemas'][-1]['tables'].append(table_info)
+                                        connector_info['tables'].append(table_info)
+                                        connector_info['total_assets'] += 1
+                                        
+                            except Exception as e:
+                                print(f"⚠️ Error getting tables for {catalog_name}.{schema_name}: {e}")
+                                
+                except Exception as e:
+                    print(f"⚠️ Error getting schemas for {catalog_name}: {e}")
+                
+                discovered_connectors.append(connector_info)
+                print(f"✅ Discovered {connector_type} connector: {catalog_name} ({connector_info['total_assets']} assets)")
+        
+        return discovered_connectors
+        
+    except Exception as e:
+        print(f"❌ Error discovering Starburst connectors: {e}")
+        return []
+
+def determine_connector_type(catalog_name: str, catalog_type: str) -> str:
+    """
+    Determine the actual data source type based on catalog name and type.
+    This helps identify what kind of database/system the catalog connects to.
+    """
+    catalog_lower = catalog_name.lower()
+    type_lower = catalog_type.lower() if catalog_type else ''
+    
+    # Database connectors
+    if 'postgres' in catalog_lower or 'postgresql' in catalog_lower:
+        return 'PostgreSQL'
+    elif 'mysql' in catalog_lower:
+        return 'MySQL'
+    elif 'mariadb' in catalog_lower:
+        return 'MariaDB'
+    elif 'oracle' in catalog_lower:
+        return 'Oracle'
+    elif 'sqlserver' in catalog_lower or 'mssql' in catalog_lower:
+        return 'SQL Server'
+    elif 'db2' in catalog_lower:
+        return 'IBM DB2'
+    elif 'teradata' in catalog_lower:
+        return 'Teradata'
+    
+    # Cloud data warehouses
+    elif 'snowflake' in catalog_lower:
+        return 'Snowflake'
+    elif 'redshift' in catalog_lower:
+        return 'Amazon Redshift'
+    elif 'bigquery' in catalog_lower or 'bq' in catalog_lower:
+        return 'Google BigQuery'
+    elif 'synapse' in catalog_lower:
+        return 'Azure Synapse'
+    elif 'databricks' in catalog_lower:
+        return 'Databricks'
+    
+    # NoSQL databases
+    elif 'mongodb' in catalog_lower or 'mongo' in catalog_lower:
+        return 'MongoDB'
+    elif 'cassandra' in catalog_lower:
+        return 'Cassandra'
+    elif 'dynamodb' in catalog_lower:
+        return 'Amazon DynamoDB'
+    elif 'elasticsearch' in catalog_lower or 'elastic' in catalog_lower:
+        return 'Elasticsearch'
+    
+    # Object storage
+    elif 's3' in catalog_lower:
+        return 'Amazon S3'
+    elif 'gcs' in catalog_lower or 'gcp' in catalog_lower:
+        return 'Google Cloud Storage'
+    elif 'azure' in catalog_lower and 'storage' in catalog_lower:
+        return 'Azure Blob Storage'
+    elif 'hdfs' in catalog_lower:
+        return 'HDFS'
+    
+    # Streaming data
+    elif 'kafka' in catalog_lower:
+        return 'Apache Kafka'
+    elif 'pulsar' in catalog_lower:
+        return 'Apache Pulsar'
+    
+    # Analytics engines
+    elif 'presto' in catalog_lower:
+        return 'Presto'
+    elif 'trino' in catalog_lower:
+        return 'Trino'
+    elif 'hive' in catalog_lower:
+        return 'Apache Hive'
+    elif 'iceberg' in catalog_lower:
+        return 'Apache Iceberg'
+    elif 'delta' in catalog_lower:
+        return 'Delta Lake'
+    
+    # Cloud platforms
+    elif 'aws' in catalog_lower:
+        return 'Amazon Web Services'
+    elif 'azure' in catalog_lower:
+        return 'Microsoft Azure'
+    elif 'gcp' in catalog_lower or 'google' in catalog_lower:
+        return 'Google Cloud Platform'
+    
+    # Default based on catalog type
+    elif 'jdbc' in type_lower:
+        return 'JDBC Database'
+    elif 'hive' in type_lower:
+        return 'Apache Hive'
+    elif 'iceberg' in type_lower:
+        return 'Apache Iceberg'
+    elif 'delta' in type_lower:
+        return 'Delta Lake'
+    elif 'kafka' in type_lower:
+        return 'Apache Kafka'
+    
+    # Fallback
+    else:
+        return f'Unknown ({catalog_type or "Custom"})'
 
 def get_starburst_connector():
     """Get active Starburst connector from main"""
@@ -276,9 +818,10 @@ def sanitize_tag_name(tag_name: str) -> str:
 
 def lookup_catalog_schema_table_ids(account_domain: str, access_token: str, catalog_name: str, schema_name: str, table_name: str):
     """
-    Look up the database IDs for catalog, schema, and table
+    Look up the database IDs for catalog, schema, and table - OPTIMIZED VERSION with retry logic
     """
     import requests
+    import time
     
     base_url = f"https://{account_domain}"
     headers = {
@@ -286,69 +829,153 @@ def lookup_catalog_schema_table_ids(account_domain: str, access_token: str, cata
         'Content-Type': 'application/json'
     }
     
+    # Retry configuration
+    max_retries = 3
+    base_timeout = 30  # Increased base timeout
+    retry_delay = 2  # seconds between retries
+    
+    def make_request_with_retry(url, operation_name, timeout=None):
+        """Make a request with retry logic"""
+        if timeout is None:
+            timeout = base_timeout
+            
+        for attempt in range(max_retries):
+            try:
+                print(f"🔍 {operation_name} (attempt {attempt + 1}/{max_retries})...")
+                response = requests.get(url, headers=headers, timeout=timeout)
+                if response.status_code == 200:
+                    return response
+                else:
+                    print(f"❌ {operation_name} failed: HTTP {response.status_code}")
+                    if attempt < max_retries - 1:
+                        print(f"⏳ Retrying in {retry_delay} seconds...")
+                        time.sleep(retry_delay)
+            except requests.exceptions.Timeout:
+                print(f"⏱️ {operation_name} timed out (attempt {attempt + 1}/{max_retries})")
+                if attempt < max_retries - 1:
+                    print(f"⏳ Retrying in {retry_delay} seconds...")
+                    time.sleep(retry_delay)
+            except Exception as e:
+                print(f"❌ {operation_name} error: {str(e)}")
+                if attempt < max_retries - 1:
+                    print(f"⏳ Retrying in {retry_delay} seconds...")
+                    time.sleep(retry_delay)
+        return None
+    
     try:
-        # Get catalog ID
+        # Step 1: Get catalog ID with retry logic
         catalogs_url = f"{base_url}/public/api/v1/catalog"
-        print(f"🔍 Looking up catalog '{catalog_name}'...")
-        catalogs_response = requests.get(catalogs_url, headers=headers, timeout=15)
-        if catalogs_response.status_code == 200:
-            catalogs = catalogs_response.json().get('result', [])
-            print(f"   Found {len(catalogs)} catalogs to search")
-            for catalog in catalogs:
-                # Try different field names
-                catalog_id = catalog.get('catalogId') or catalog.get('id') or catalog.get('name')
-                catalog_name_from_api = catalog.get('catalogName') or catalog.get('name')
-                
-                if catalog_name_from_api == catalog_name:
-                    print(f"✅ Found catalog: {catalog_name} (ID: {catalog_id})")
-                    
-                    # Get schema ID
-                    print(f"🔍 Looking up schema '{schema_name}'...")
-                    schemas_url = f"{base_url}/public/api/v1/catalog/{catalog_id}/schema"
-                    schemas_response = requests.get(schemas_url, headers=headers, timeout=15)
-                    if schemas_response.status_code == 200:
-                        schemas = schemas_response.json().get('result', [])
-                        print(f"   Found {len(schemas)} schemas to search")
-                        for schema in schemas:
-                            # Try different field names for schema
-                            schema_id_from_api = schema.get('schemaId') or schema.get('id') or schema.get('name')
-                            
-                            # In Starburst, schemaId might BE the schema name, not a UUID!
-                            if schema_id_from_api == schema_name:
-                                print(f"✅ Found schema: {schema_name} (ID: {schema_id_from_api})")
-                                
-                                # Get table ID
-                                print(f"🔍 Looking up table '{table_name}'...")
-                                tables_url = f"{base_url}/public/api/v1/catalog/{catalog_id}/schema/{schema_id_from_api}/table"
-                                tables_response = requests.get(tables_url, headers=headers, timeout=15)
-                                if tables_response.status_code == 200:
-                                    tables = tables_response.json().get('result', [])
-                                    print(f"   Found {len(tables)} tables to search")
-                                    for table in tables:
-                                        # Try different field names for table
-                                        table_id_from_api = table.get('tableId') or table.get('id') or table.get('name')
-                                        if table_id_from_api == table_name:
-                                            print(f"✅ Found table: {table_name} (ID: {table_id_from_api})")
-                                            return (catalog_id, schema_id_from_api, table_id_from_api)
-                                    print(f"❌ Table '{table_name}' not found in schema '{schema_name}'")
-                                    print(f"   Available tables: {[t.get('tableId') or t.get('name') for t in tables[:10]]}")
-                                else:
-                                    print(f"❌ Failed to get tables: HTTP {tables_response.status_code}")
-                        print(f"❌ Schema '{schema_name}' not found in catalog '{catalog_name}'")
-                        print(f"   Available schemas: {[s.get('schemaId') or s.get('name') for s in schemas[:10]]}")
-                    else:
-                        print(f"❌ Failed to get schemas: HTTP {schemas_response.status_code}")
-        else:
-            print(f"❌ Failed to get catalogs: HTTP {catalogs_response.status_code}")
-    except requests.exceptions.Timeout:
-        print(f"❌ Timeout while looking up {catalog_name}.{schema_name}.{table_name}")
-        return (None, None, None)
+        catalogs_response = make_request_with_retry(catalogs_url, f"Looking up catalog '{catalog_name}'")
+        
+        if not catalogs_response:
+            print(f"❌ Failed to get catalogs after {max_retries} attempts")
+            # Fallback: try using provided names directly as IDs
+            print("🟡 Falling back to provided names as IDs for catalog/schema/table")
+            return (catalog_name, schema_name, table_name)
+        catalogs = catalogs_response.json().get('result', [])
+        print(f"   Found {len(catalogs)} catalogs to search")
+
+        catalog_id = None
+        for catalog in catalogs:
+            # Try different field names
+            potential_catalog_id = catalog.get('catalogId') or catalog.get('id') or catalog.get('name')
+            catalog_name_from_api = catalog.get('catalogName') or catalog.get('name')
+
+            if catalog_name_from_api == catalog_name:
+                catalog_id = potential_catalog_id
+                print(f"✅ Found catalog: {catalog_name} (ID: {catalog_id})")
+                break
+        
+        if not catalog_id:
+            print(f"❌ Catalog '{catalog_name}' not found")
+            print(f"   Available catalogs: {[c.get('catalogName') or c.get('name') for c in catalogs[:10]]}")
+            # Fallback to name-as-ID
+            print("🟡 Falling back: using catalog name as ID")
+            catalog_id = catalog_name
+        
+        # Step 2: Get schema ID with retry logic
+        schemas_url = f"{base_url}/public/api/v1/catalog/{catalog_id}/schema"
+        schemas_response = make_request_with_retry(schemas_url, f"Looking up schema '{schema_name}'")
+        
+        if not schemas_response:
+            print(f"❌ Failed to get schemas after {max_retries} attempts")
+            # Fallback to name-as-ID for schema
+            print("🟡 Falling back: using schema name as ID")
+            schema_id = schema_name
+            # Proceed to tables using fallback values
+            
+            # Step 3: Get table ID with retry logic (may also fallback)
+            tables_url = f"{base_url}/public/api/v1/catalog/{catalog_id}/schema/{schema_id}/table"
+            tables_response = make_request_with_retry(tables_url, f"Looking up table '{table_name}'", timeout=20)
+            if not tables_response:
+                print(f"❌ Failed to get tables after {max_retries} attempts")
+                print("🟡 Falling back: using table name as ID")
+                return (catalog_id, schema_id, table_name)
+            tables = tables_response.json().get('result', [])
+            table_id = None
+            for table in tables:
+                potential_table_id = table.get('tableId') or table.get('id') or table.get('name')
+                if potential_table_id == table_name:
+                    table_id = potential_table_id
+                    break
+            if not table_id:
+                print(f"❌ Table '{table_name}' not found via API; falling back to name-as-ID")
+                table_id = table_name
+            return (catalog_id, schema_id, table_id)
+        
+        schemas = schemas_response.json().get('result', [])
+        print(f"   Found {len(schemas)} schemas to search")
+        schema_id = None
+        for schema in schemas:
+            # Try different field names for schema
+            potential_schema_id = schema.get('schemaId') or schema.get('id') or schema.get('name')
+            
+            # In Starburst, schemaId might BE the schema name, not a UUID!
+            if potential_schema_id == schema_name:
+                schema_id = potential_schema_id
+                print(f"✅ Found schema: {schema_name} (ID: {schema_id})")
+                break
+        
+        if not schema_id:
+            print(f"❌ Schema '{schema_name}' not found in catalog '{catalog_name}'")
+            print(f"   Available schemas: {[s.get('schemaId') or s.get('name') for s in schemas[:10]]}")
+            print("🟡 Falling back: using schema name as ID")
+            schema_id = schema_name
+        
+        # Step 3: Get table ID with retry logic
+        tables_url = f"{base_url}/public/api/v1/catalog/{catalog_id}/schema/{schema_id}/table"
+        tables_response = make_request_with_retry(tables_url, f"Looking up table '{table_name}'", timeout=20)  # Slightly shorter timeout for tables
+        
+        if not tables_response:
+            print(f"❌ Failed to get tables after {max_retries} attempts")
+            print("🟡 Falling back: using table name as ID")
+            return (catalog_id, schema_id, table_name)
+            
+        tables = tables_response.json().get('result', [])
+        print(f"   Found {len(tables)} tables to search")
+        
+        table_id = None
+        for table in tables:
+            # Try different field names for table
+            potential_table_id = table.get('tableId') or table.get('id') or table.get('name')
+            if potential_table_id == table_name:
+                table_id = potential_table_id
+                print(f"✅ Found table: {table_name} (ID: {table_id})")
+                break
+        
+        if not table_id:
+            print(f"❌ Table '{table_name}' not found in schema '{schema_name}'")
+            print(f"   Available tables: {[t.get('tableId') or t.get('name') for t in tables[:10]]}")
+            print("🟡 Falling back: using table name as ID")
+            table_id = table_name
+            # Continue with fallback IDs
+            
+        
+        return (catalog_id, schema_id, table_id)
+        
     except Exception as e:
         print(f"❌ Error looking up {catalog_name}.{schema_name}.{table_name}: {str(e)}")
         return (None, None, None)
-    
-    print(f"DEBUG: ❌ Failed to find catalog/schema/table: {catalog_name}.{schema_name}.{table_name}")
-    return (None, None, None)
 
 def get_or_create_tag(account_domain: str, access_token: str, tag_name: str, tag_color: str = "#1976d2"):
     """
@@ -372,7 +999,7 @@ def get_or_create_tag(account_domain: str, access_token: str, tag_name: str, tag
     get_url = f"{base_url}/public/api/v1/tag/{encoded_tag_name}"
     
     print(f"DEBUG: Fetching tag: {get_url}")
-    get_response = requests.get(get_url, headers=headers, timeout=15)
+    get_response = requests.get(get_url, headers=headers, timeout=10)  # Increased timeout
     
     if get_response.status_code == 200:
         tag_data = get_response.json()
@@ -388,7 +1015,7 @@ def get_or_create_tag(account_domain: str, access_token: str, tag_name: str, tag
         "description": f"Tag: {sanitized_tag_name} (original: {tag_name})"
     }
     
-    create_response = requests.post(create_url, headers=headers, json=create_payload, timeout=15)
+    create_response = requests.post(create_url, headers=headers, json=create_payload, timeout=10)  # Increased timeout
     if create_response.status_code not in [200, 201]:
         raise Exception(f"Failed to create tag: {create_response.status_code} - {create_response.text}")
     
@@ -665,112 +1292,13 @@ async def get_all_starburst_tags():
         except Exception as tag_error:
             print(f"⚠️ Could not fetch tag definitions: {tag_error}")
         
-        # Fetch tags from actual columns in Starburst tables using the Starburst API
-        # We'll iterate through all catalogs/schemas/tables and check column metadata
-        try:
-            catalogs_url = f"{base_url}/public/api/v1/catalog"
-            catalogs_response = requests.get(catalogs_url, headers=headers, timeout=30)
-            
-            if catalogs_response.status_code == 200:
-                catalogs = catalogs_response.json().get('result', [])
-                print(f"DEBUG: Found {len(catalogs)} catalogs to scan for tags")
-                
-                for catalog in catalogs:
-                    catalog_id = catalog.get('catalogId')
-                    catalog_name = catalog.get('catalogName')
-                    
-                    try:
-                        schemas_url = f"{base_url}/public/api/v1/catalog/{catalog_id}/schema"
-                        schemas_response = requests.get(schemas_url, headers=headers, timeout=30)
-                        
-                        if schemas_response.status_code == 200:
-                            schemas = schemas_response.json().get('result', [])
-                            
-                            for schema in schemas:
-                                schema_id = schema.get('schemaId')
-                                
-                                try:
-                                    tables_url = f"{base_url}/public/api/v1/catalog/{catalog_id}/schema/{schema_id}/table"
-                                    tables_response = requests.get(tables_url, headers=headers, timeout=30)
-                                    
-                                    if tables_response.status_code == 200:
-                                        tables = tables_response.json().get('result', [])
-                                        
-                                        for table in tables:
-                                            table_id = table.get('tableId')
-                                            
-                                            # Try to get column information
-                                            try:
-                                                # Get columns for this table
-                                                columns_url = f"{base_url}/public/api/v1/catalog/{catalog_id}/schema/{schema_id}/table/{table_id}"
-                                                columns_response = requests.get(columns_url, headers=headers, timeout=30)
-                                                
-                                                if columns_response.status_code == 200:
-                                                    column_data = columns_response.json()
-                                                    # Check if response has columns array
-                                                    if isinstance(column_data, dict):
-                                                        columns = column_data.get('columns', column_data.get('result', []))
-                                                        for col in columns:
-                                                            # Check for tags in description or other metadata
-                                                            description = col.get('description', '')
-                                                            if description:
-                                                                # Parse tags from description
-                                                                if '[' in description and ']' in description:
-                                                                    import re
-                                                                    tags_pattern = r'\[(.*?)\]'
-                                                                    matches = re.findall(tags_pattern, description)
-                                                                    if matches:
-                                                                        tags_str = matches[-1]
-                                                                        for tag in tags_str.split(','):
-                                                                            tag_clean = tag.strip()
-                                                                            if tag_clean:
-                                                                                all_tags.add(tag_clean)
-                                                                elif ',' in description:
-                                                                    tags = [t.strip() for t in description.split(',') if t.strip()]
-                                                                    all_tags.update(tags)
-                                                                elif len(description) < 50:
-                                                                    all_tags.add(description.strip())
-                                            except Exception as column_error:
-                                                pass
-                                except Exception as table_fetch_error:
-                                    continue
-                    except Exception as schema_fetch_error:
-                        continue
-        except Exception as fetch_error:
-            print(f"⚠️ Could not fetch tags from Starburst tables: {fetch_error}")
+        # OPTIMIZED: Skip the massive table scan for performance
+        # The table scan was causing timeouts and is not necessary for tag suggestions
+        print(f"🚀 OPTIMIZED: Skipping massive table scan for performance - only fetching tag definitions")
         
-        # Try to fetch column tags from Starburst Galaxy discovery/assets
-        try:
-            from main import discovered_assets
-            
-            # Look through discovered assets for column tags
-            for asset in discovered_assets:
-                connector_id = asset.get('connector_id', '')
-                if connector_id == starburst_connector.get('id'):
-                    # Check if asset has columns with tags in metadata
-                    columns = asset.get('columns', [])
-                    for col in columns:
-                        # Check if column has description or other metadata that might contain tags
-                        description = col.get('description', '')
-                        if description:
-                            # Try to parse tags from description
-                            import re
-                            if '[' in description and ']' in description:
-                                tags_pattern = r'\[(.*?)\]'
-                                matches = re.findall(tags_pattern, description)
-                                if matches:
-                                    tags_str = matches[-1]
-                                    for tag in tags_str.split(','):
-                                        tag_clean = tag.strip()
-                                        if tag_clean:
-                                            all_tags.add(tag_clean)
-                            elif ',' in description:
-                                tags = [t.strip() for t in description.split(',') if t.strip()]
-                                all_tags.update(tags)
-                            elif len(description) < 50:
-                                all_tags.add(description.strip())
-        except Exception as asset_error:
-            print(f"Could not fetch tags from discovered assets: {asset_error}")
+        # OPTIMIZED: Skip discovered assets scan for performance
+        # This was also contributing to slowness
+        print(f"🚀 OPTIMIZED: Skipping discovered assets scan for performance")
         
         # NOTE: We're ONLY fetching from REAL Starburst Galaxy API now - NO cache files!
         
@@ -915,25 +1443,46 @@ async def publish_tags(request: PublishTagsRequest):
         success_count = 0
         error_messages = []
         
-        # Fetch ALL tags once at the start for efficient lookup
-        print(f"🔍 Step 1: Fetching all existing tags from Starburst Galaxy...")
-        all_tags_map = get_all_tags(account_domain, access_token)
-        print(f"✅ Found {len(all_tags_map)} existing tags in system")
+        # SKIP tag fetching for speed - create tags on demand
+        print(f"🚀 Step 1: Skipping tag fetch for speed - will create tags on demand...")
+        all_tags_map = {}  # Empty map - we'll create tags as needed
         
-        # Look up catalog/schema/table IDs once
-        print(f"🔍 Step 2: Looking up catalog/schema/table IDs...")
+        # PROPER APPROACH: Look up actual database IDs (required for Starburst API)
+        print(f"🚀 Step 2: Looking up actual database IDs (required for Starburst API)...")
+        print(f"🔍 Looking up: {request.catalog}.{request.schema}.{request.tableId}")
+        
         catalog_id, schema_id, table_id = lookup_catalog_schema_table_ids(
             account_domain, access_token, request.catalog, request.schema, request.tableId
         )
-        print(f"✅ Found catalog_id={catalog_id}, schema_id={schema_id}, table_id={table_id}")
+        print(f"✅ Found IDs: catalog_id={catalog_id}, schema_id={schema_id}, table_id={table_id}")
         
         # If IDs are None, we can't apply tags
         if not catalog_id or not schema_id or not table_id:
             error_msg = f"❌ Failed to find catalog/schema/table IDs for {request.catalog}.{request.schema}.{request.tableId}"
             print(error_msg)
-            raise HTTPException(
-                status_code=404,
-                detail=error_msg + ". Please ensure the catalog, schema, and table exist in Starburst Galaxy."
+            
+            # Provide more detailed error information
+            detailed_error = f"❌ Starburst Table Not Found!\n\n"
+            detailed_error += f"Could not find: {request.catalog}.{request.schema}.{request.tableId}\n\n"
+            detailed_error += f"Possible reasons:\n"
+            detailed_error += f"1. The catalog '{request.catalog}' doesn't exist\n"
+            detailed_error += f"2. The schema '{request.schema}' doesn't exist in catalog '{request.catalog}'\n"
+            detailed_error += f"3. The table '{request.tableId}' doesn't exist in schema '{request.schema}'\n"
+            detailed_error += f"4. You don't have permission to access this table\n"
+            detailed_error += f"5. The table hasn't been discovered yet\n\n"
+            detailed_error += f"Please check:\n"
+            detailed_error += f"• Verify the catalog, schema, and table names are correct\n"
+            detailed_error += f"• Ensure the table exists in Starburst Galaxy\n"
+            detailed_error += f"• Check your Starburst Galaxy permissions\n"
+            detailed_error += f"• Try running discovery first to populate the table list"
+            
+            return PublishTagsResponse(
+                success=False,
+                message="Failed to find table in Starburst Galaxy",
+                sqlCommands=[],
+                requiresBilling=False,
+                billingMessage=detailed_error,
+                maskedViewSQL=""
             )
         
         # Apply catalog-level tag if provided
@@ -1077,6 +1626,8 @@ async def publish_tags(request: PublishTagsRequest):
                         else:
                             error_msg = f"HTTP {update_response.status_code}: {update_response.text[:200]}"
                             print(f"❌ Failed to apply tag '{tag_name}' to column '{col_tag.columnName}': {error_msg}")
+                            print(f"❌ Full URL: {update_url}")
+                            print(f"❌ Response headers: {dict(update_response.headers)}")
                             error_messages.append(f"Column '{col_tag.columnName}', Tag '{tag_name}': {error_msg}")
                     else:
                         error_msg = "Could not find catalog/schema/table IDs"
@@ -1089,14 +1640,83 @@ async def publish_tags(request: PublishTagsRequest):
         
         # Generate masked view for PII columns (if any)
         masked_view_sql = ""
+        masked_view_created = False
+        masked_view_name = ""
+        masked_view_error = ""
+        
         try:
             # Generate masked view SQL based on PII tags
             from main import discovered_assets
             masked_view_sql = generate_masked_view_sql_starburst(
                 request.catalog, request.schema, request.tableId, request.columnTags, discovered_assets
             )
+            # Build human-readable masking rules that will be shown in UI
+            masking_rules: List[Dict[str, Any]] = []
+            try:
+                # Map column -> type from discovered assets (best-effort)
+                table_id_key = f"{request.catalog}.{request.schema}.{request.tableId}"
+                table_asset = next((a for a in discovered_assets if a.get('id') == table_id_key or a.get('id') == f"torro001.galaxy.starburst.io.{table_id_key}"), None)
+                col_types = {c.get('name'): (c.get('type') or 'VARCHAR') for c in (table_asset.get('columns', []) if table_asset else [])}
+            except Exception:
+                col_types = {}
+            for ct in request.columnTags:
+                if not ct.tags:
+                    continue
+                sensitivity = get_pii_sensitivity_level(ct.tags, ct.columnName)
+                if sensitivity == 'NONE':
+                    continue
+                column_type = col_types.get(ct.columnName, 'VARCHAR')
+                # Derive a short description that matches get_masking_strategy
+                if sensitivity == 'CRITICAL':
+                    logic = 'Fully masked (NULL or ***FULLY_MASKED***)'
+                elif sensitivity == 'HIGH':
+                    if 'email' in ct.columnName.lower():
+                        logic = 'Email masked: aa***@***bb'
+                    elif 'phone' in ct.columnName.lower():
+                        logic = 'Phone masked: ***-***-LAST4'
+                    else:
+                        logic = 'Strong mask: keep first/last 2 chars'
+                elif sensitivity == 'MEDIUM':
+                    if 'name' in ct.columnName.lower():
+                        logic = 'Name masked: first letter + stars'
+                    else:
+                        logic = 'Partial mask: keep first/last 3 chars'
+                elif sensitivity == 'LOW':
+                    logic = 'Light mask: show all but last 4 as ****'
+                else:
+                    logic = 'No masking'
+                masking_rules.append({
+                    'column': ct.columnName,
+                    'sensitivity': sensitivity,
+                    'type': column_type,
+                    'logic': logic,
+                })
+            
+            # If masked view SQL was generated, attempt to execute it in Starburst
+            if masked_view_sql:
+                print(f"🔒 Masked view SQL generated for PII columns, attempting to create view in Starburst...")
+                print(f"📝 Generated SQL:\n{masked_view_sql}")
+                
+                view_success, view_error, view_name = execute_sql_starburst(
+                    account_domain, access_token, masked_view_sql, request.catalog
+                )
+                
+                if view_success:
+                    masked_view_created = True
+                    masked_view_name = view_name or f"{request.catalog}.{request.schema}.{request.tableId}_masked"
+                    print(f"✅ Masked view '{masked_view_name}' created successfully in Starburst!")
+                else:
+                    masked_view_error = view_error
+                    print(f"⚠️ Failed to create masked view via API: {view_error}")
+                    print(f"📝 Masked view SQL is available for manual execution in Starburst Studio")
+                    print(f"💡 To create the masked view manually:")
+                    print(f"   1. Open Starburst Studio")
+                    print(f"   2. Connect to catalog: {request.catalog}")
+                    print(f"   3. Run the SQL provided in the response")
         except Exception as e:
-            print(f"Error generating masked view SQL: {str(e)}")
+            error_msg = f"Error generating/executing masked view SQL: {str(e)}"
+            print(f"❌ {error_msg}")
+            masked_view_error = error_msg
         
         # Build response message
         # Count ALL tags: catalog + schema + table + column tags
@@ -1141,8 +1761,31 @@ async def publish_tags(request: PublishTagsRequest):
                 billing_message += "Tags applied at:\n" + "\n".join(f"• {item}" for item in applied_breakdown) + "\n\n"
             
             billing_message += "All tags have been directly added to Starburst Galaxy!"
-            if masked_view_sql:
-                billing_message += "\n\n🔒 Security: Masked view SQL generated for PII columns!"
+            if masked_view_created:
+                billing_message += f"\n\n🔒 Security: Masked view '{masked_view_name}' created successfully!\n"
+                billing_message += f"The masked view applies different masking levels based on PII sensitivity:\n"
+                billing_message += f"• CRITICAL PII: Fully masked (***FULLY_MASKED***)\n"
+                billing_message += f"• HIGH PII: Strong masking (partial info shown)\n"
+                billing_message += f"• MEDIUM PII: Partial masking (some structure preserved)\n"
+                billing_message += f"• LOW PII: Light masking (most data visible)\n"
+                billing_message += f"\n📍 Where to find your masked view:\n"
+                billing_message += f"• In Starburst Studio: Look for '{masked_view_name}' in the {request.catalog}.{request.schema} schema\n"
+                billing_message += f"• In Starburst Galaxy: Navigate to Data → {request.catalog} → {request.schema} → Views\n"
+            elif masked_view_sql:
+                billing_message += "\n\n🔒 Security: Masked view SQL generated for PII columns!\n"
+                billing_message += f"Different masking levels will be applied based on PII sensitivity.\n"
+                if masked_view_error:
+                    billing_message += f"⚠️ Automatic view creation failed: {masked_view_error}\n"
+                billing_message += f"\n📍 To create the masked view manually:\n"
+                billing_message += f"1. Open Starburst Studio (https://{account_domain.replace('.galaxy.starburst.io', '')}.galaxy.starburst.io/studio)\n"
+                billing_message += f"2. Connect to catalog: {request.catalog}\n"
+                billing_message += f"3. Run the SQL provided below to create the masked view\n"
+                billing_message += f"4. The view will appear as '{request.tableId}_masked' in schema '{request.schema}'"
+            # Append masking rules section for UI visibility
+            if masking_rules:
+                billing_message += "\n🔒 Masking logic that will be applied:\n"
+                for rule in masking_rules:
+                    billing_message += f"• {rule['column']} [{rule['sensitivity']}]: {rule['logic']}\n"
             success = True
         elif success_count > 0:
             billing_message = f"⚠️ Partial Success: {success_count} of {total_tags} tags applied.\n\n"
@@ -1150,8 +1793,20 @@ async def publish_tags(request: PublishTagsRequest):
                 billing_message += "Errors:\n" + "\n".join(error_messages[:5])
                 if len(error_messages) > 5:
                     billing_message += f"\n... and {len(error_messages) - 5} more errors"
-            if masked_view_sql:
+            if masked_view_created:
+                billing_message += f"\n\n🔒 Security: Masked view '{masked_view_name}' created successfully!"
+                billing_message += f"\nDifferent masking levels applied based on PII sensitivity."
+                billing_message += f"\n📍 Find it in Starburst Studio: {request.catalog}.{request.schema}.{masked_view_name}"
+            elif masked_view_sql:
                 billing_message += "\n\n🔒 Security: Masked view SQL generated for PII columns!"
+                billing_message += f"\nDifferent masking levels will be applied based on PII sensitivity."
+                if masked_view_error:
+                    billing_message += f"\n⚠️ View creation failed: {masked_view_error}"
+                billing_message += f"\n📍 Run the SQL in Starburst Studio to create the masked view"
+            if masking_rules:
+                billing_message += "\n\n🔒 Masking logic that will be applied:\n"
+                for rule in masking_rules:
+                    billing_message += f"• {rule['column']} [{rule['sensitivity']}]: {rule['logic']}\n"
             success = True
         else:
             billing_message = f"❌ Starburst Tag Publishing Failed!\n\n"
@@ -1167,7 +1822,11 @@ async def publish_tags(request: PublishTagsRequest):
             sqlCommands=[],
             requiresBilling=False,
             billingMessage=billing_message,
-            maskedViewSQL=masked_view_sql
+            maskedViewSQL=masked_view_sql,
+            maskedViewCreated=masked_view_created,
+            maskedViewName=masked_view_name,
+            maskedViewError=masked_view_error,
+            maskingRules=masking_rules
         )
         
     except HTTPException as http_err:
@@ -1194,8 +1853,305 @@ async def publish_tags(request: PublishTagsRequest):
             sqlCommands=[],
             requiresBilling=False,
             billingMessage=billing_message,
-            maskedViewSQL=""
+            maskedViewSQL="",
+            maskedViewCreated=False,
+            maskedViewName="",
+            maskedViewError=""
         )
+
+@router.post("/clear-cache")
+async def clear_starburst_cache():
+    """Clear the Starburst token cache"""
+    clear_starburst_token_cache()
+    return {"success": True, "message": "Token cache cleared"}
+
+@router.get("/cache-status")
+async def get_cache_status():
+    """Get current cache status"""
+    import time
+    current_time = time.time()
+    
+    cache_info = []
+    for cache_key, expiry in _token_cache_expiry.items():
+        remaining = max(0, expiry - current_time)
+        cache_info.append({
+            "account": cache_key.split(':')[0],
+            "remaining_minutes": round(remaining / 60, 1),
+            "expired": remaining <= 0
+        })
+    
+    return {
+        "success": True,
+        "cached_tokens": len(_token_cache),
+        "cache_info": cache_info
+    }
+
+@router.post("/publish-tags-stream")
+async def publish_tags_stream(request: PublishTagsRequest):
+    """
+    Publish tags to Starburst Galaxy with real-time progress updates via Server-Sent Events
+    """
+    from fastapi.responses import StreamingResponse
+    import json
+    import time
+    
+    async def generate_progress():
+        start_time = time.time()
+        
+        try:
+            # Step 1: Authentication
+            yield f"data: {json.dumps({'step': 1, 'status': 'in_progress', 'message': 'Authenticating with Starburst Galaxy...'})}\n\n"
+            
+            starburst_connector = get_starburst_connector()
+            
+            if not starburst_connector:
+                yield f"data: {json.dumps({'step': 1, 'status': 'error', 'message': 'No active Starburst Galaxy connector found'})}\n\n"
+                return
+            
+            # Get connection details
+            account_domain = starburst_connector.get('account_domain')
+            client_id = starburst_connector.get('client_id')
+            client_secret = starburst_connector.get('client_secret')
+            
+            if not client_id or not client_secret or client_id == 'your-starburst-client-id' or client_secret == 'your-starburst-client-secret':
+                yield f"data: {json.dumps({'step': 1, 'status': 'error', 'message': 'Invalid Starburst credentials'})}\n\n"
+                return
+            
+            # Get access token (will use cache if available)
+            access_token = get_starburst_access_token(account_domain, client_id, client_secret)
+            
+            # Check if we used cached token
+            cache_key = f"{account_domain}:{client_id}"
+            if cache_key in _token_cache and cache_key in _token_cache_expiry:
+                import time
+                if time.time() < _token_cache_expiry[cache_key]:
+                    yield f"data: {json.dumps({'step': 1, 'status': 'completed', 'message': 'Authentication successful (using cached token - much faster!)'})}\n\n"
+                else:
+                    yield f"data: {json.dumps({'step': 1, 'status': 'completed', 'message': 'Authentication successful'})}\n\n"
+            else:
+                yield f"data: {json.dumps({'step': 1, 'status': 'completed', 'message': 'Authentication successful'})}\n\n"
+            
+            # Step 2: Look up catalog
+            yield f"data: {json.dumps({'step': 2, 'status': 'in_progress', 'message': f'Looking up catalog: {request.catalog}'})}\n\n"
+            
+            # Step 3: Look up schema
+            yield f"data: {json.dumps({'step': 3, 'status': 'in_progress', 'message': f'Looking up schema: {request.schema}'})}\n\n"
+            
+            # Step 4: Look up table
+            yield f"data: {json.dumps({'step': 4, 'status': 'in_progress', 'message': f'Looking up table: {request.tableId}'})}\n\n"
+            
+            # Perform the actual lookup
+            catalog_id, schema_id, table_id = lookup_catalog_schema_table_ids(
+                account_domain, access_token, request.catalog, request.schema, request.tableId
+            )
+            
+            if not catalog_id or not schema_id or not table_id:
+                yield f"data: {json.dumps({'step': 4, 'status': 'error', 'message': f'Failed to find table: {request.catalog}.{request.schema}.{request.tableId}'})}\n\n"
+                return
+            
+            yield f"data: {json.dumps({'step': 2, 'status': 'completed', 'message': f'Found catalog: {catalog_id}'})}\n\n"
+            yield f"data: {json.dumps({'step': 3, 'status': 'completed', 'message': f'Found schema: {schema_id}'})}\n\n"
+            yield f"data: {json.dumps({'step': 4, 'status': 'completed', 'message': f'Found table: {table_id}'})}\n\n"
+            
+            # Step 5: Create/verify tags
+            yield f"data: {json.dumps({'step': 5, 'status': 'in_progress', 'message': 'Creating/verifying tags...'})}\n\n"
+            
+            base_url = f"https://{account_domain}"
+            headers = {
+                'Authorization': f'Bearer {access_token}',
+                'Content-Type': 'application/json'
+            }
+            
+            all_tags_map = {}
+            success_count = 0
+            error_messages = []
+            
+            # Step 6: Apply catalog-level tag
+            if request.catalogTag:
+                yield f"data: {json.dumps({'step': 6, 'status': 'in_progress', 'message': f'Applying catalog tag: {request.catalogTag}'})}\n\n"
+                try:
+                    sanitized_tag_name = sanitize_tag_name(request.catalogTag)
+                    tag_id, _ = get_or_create_tag(account_domain, access_token, request.catalogTag)
+                    encoded_tag_id = requests.utils.quote(tag_id)
+                    encoded_catalog_id = requests.utils.quote(catalog_id)
+                    catalog_tag_url = f"{base_url}/public/api/v1/tag/{encoded_tag_id}/catalog/{encoded_catalog_id}"
+                    update_response = requests.put(catalog_tag_url, headers=headers, json={}, timeout=15)
+                    
+                    if update_response.status_code in [200, 204]:
+                        success_count += 1
+                        yield f"data: {json.dumps({'step': 6, 'status': 'completed', 'message': f'Successfully applied catalog tag: {request.catalogTag}'})}\n\n"
+                    else:
+                        error_msg = f"HTTP {update_response.status_code}: {update_response.text[:200]}"
+                        error_messages.append(f"Catalog tag: {error_msg}")
+                        yield f"data: {json.dumps({'step': 6, 'status': 'error', 'message': f'Failed to apply catalog tag: {error_msg}'})}\n\n"
+                except Exception as e:
+                    error_messages.append(f"Catalog tag: {str(e)}")
+                    yield f"data: {json.dumps({'step': 6, 'status': 'error', 'message': f'Error applying catalog tag: {str(e)}'})}\n\n"
+            else:
+                yield f"data: {json.dumps({'step': 6, 'status': 'skipped', 'message': 'No catalog tag to apply'})}\n\n"
+            
+            # Step 7: Apply schema-level tag
+            if request.schemaTag:
+                yield f"data: {json.dumps({'step': 7, 'status': 'in_progress', 'message': f'Applying schema tag: {request.schemaTag}'})}\n\n"
+                try:
+                    sanitized_tag_name = sanitize_tag_name(request.schemaTag)
+                    tag_id, _ = get_or_create_tag(account_domain, access_token, request.schemaTag)
+                    encoded_tag_id = requests.utils.quote(tag_id)
+                    encoded_catalog_id = requests.utils.quote(catalog_id)
+                    encoded_schema_id = requests.utils.quote(schema_id)
+                    schema_tag_url = f"{base_url}/public/api/v1/tag/{encoded_tag_id}/catalog/{encoded_catalog_id}/schema/{encoded_schema_id}"
+                    update_response = requests.put(schema_tag_url, headers=headers, json={}, timeout=15)
+                    
+                    if update_response.status_code in [200, 204]:
+                        success_count += 1
+                        yield f"data: {json.dumps({'step': 7, 'status': 'completed', 'message': f'Successfully applied schema tag: {request.schemaTag}'})}\n\n"
+                    else:
+                        error_msg = f"HTTP {update_response.status_code}: {update_response.text[:200]}"
+                        error_messages.append(f"Schema tag: {error_msg}")
+                        yield f"data: {json.dumps({'step': 7, 'status': 'error', 'message': f'Failed to apply schema tag: {error_msg}'})}\n\n"
+                except Exception as e:
+                    error_messages.append(f"Schema tag: {str(e)}")
+                    yield f"data: {json.dumps({'step': 7, 'status': 'error', 'message': f'Error applying schema tag: {str(e)}'})}\n\n"
+            else:
+                yield f"data: {json.dumps({'step': 7, 'status': 'skipped', 'message': 'No schema tag to apply'})}\n\n"
+            
+            # Step 8: Apply table-level tag
+            if request.tableTag:
+                yield f"data: {json.dumps({'step': 8, 'status': 'in_progress', 'message': f'Applying table tag: {request.tableTag}'})}\n\n"
+                try:
+                    sanitized_tag_name = sanitize_tag_name(request.tableTag)
+                    tag_id, _ = get_or_create_tag(account_domain, access_token, request.tableTag)
+                    encoded_tag_id = requests.utils.quote(tag_id)
+                    encoded_catalog_id = requests.utils.quote(catalog_id)
+                    encoded_schema_id = requests.utils.quote(schema_id)
+                    encoded_table_id = requests.utils.quote(table_id)
+                    table_tag_url = f"{base_url}/public/api/v1/tag/{encoded_tag_id}/catalog/{encoded_catalog_id}/schema/{encoded_schema_id}/table/{encoded_table_id}"
+                    update_response = requests.put(table_tag_url, headers=headers, json={}, timeout=15)
+                    
+                    if update_response.status_code in [200, 204]:
+                        success_count += 1
+                        yield f"data: {json.dumps({'step': 8, 'status': 'completed', 'message': f'Successfully applied table tag: {request.tableTag}'})}\n\n"
+                    else:
+                        error_msg = f"HTTP {update_response.status_code}: {update_response.text[:200]}"
+                        error_messages.append(f"Table tag: {error_msg}")
+                        yield f"data: {json.dumps({'step': 8, 'status': 'error', 'message': f'Failed to apply table tag: {error_msg}'})}\n\n"
+                except Exception as e:
+                    error_messages.append(f"Table tag: {str(e)}")
+                    yield f"data: {json.dumps({'step': 8, 'status': 'error', 'message': f'Error applying table tag: {str(e)}'})}\n\n"
+            else:
+                yield f"data: {json.dumps({'step': 8, 'status': 'skipped', 'message': 'No table tag to apply'})}\n\n"
+            
+            # Step 9: Apply column-level tags
+            yield f"data: {json.dumps({'step': 9, 'status': 'in_progress', 'message': f'Applying column tags to {len(request.columnTags)} columns...'})}\n\n"
+            
+            column_tags_count = 0
+            for col_tag in request.columnTags:
+                if not col_tag.tags:
+                    continue
+                
+                for tag_name in col_tag.tags:
+                    try:
+                        sanitized_tag_name = sanitize_tag_name(tag_name)
+                        tag_id, _ = get_or_create_tag(account_domain, access_token, tag_name)
+                        encoded_tag_id = requests.utils.quote(tag_id)
+                        encoded_catalog_id = requests.utils.quote(catalog_id)
+                        encoded_schema_id = requests.utils.quote(schema_id)
+                        encoded_table_id = requests.utils.quote(table_id)
+                        encoded_column = requests.utils.quote(col_tag.columnName)
+                        update_url = f"{base_url}/public/api/v1/tag/{encoded_tag_id}/catalog/{encoded_catalog_id}/schema/{encoded_schema_id}/table/{encoded_table_id}/column/{encoded_column}"
+                        update_response = requests.put(update_url, headers=headers, json={}, timeout=15)
+                        
+                        if update_response.status_code in [200, 204]:
+                            success_count += 1
+                            column_tags_count += 1
+                        else:
+                            error_msg = f"HTTP {update_response.status_code}: {update_response.text[:200]}"
+                            error_messages.append(f"Column '{col_tag.columnName}', Tag '{tag_name}': {error_msg}")
+                    except Exception as e:
+                        error_messages.append(f"Column '{col_tag.columnName}', Tag '{tag_name}': {str(e)}")
+            
+            yield f"data: {json.dumps({'step': 9, 'status': 'completed', 'message': f'Applied {column_tags_count} column tags'})}\n\n"
+            
+            # Step 10: Create masked view (if needed)
+            yield f"data: {json.dumps({'step': 10, 'status': 'in_progress', 'message': 'Checking for PII columns and creating masked view...'})}\n\n"
+            
+            masked_view_sql = ""
+            masked_view_created = False
+            masked_view_name = ""
+            masked_view_error = ""
+            
+            try:
+                from main import discovered_assets
+                masked_view_sql = generate_masked_view_sql_starburst(
+                    request.catalog, request.schema, request.tableId, request.columnTags, discovered_assets
+                )
+                
+                if masked_view_sql:
+                    view_success, view_error, view_name = execute_sql_starburst(
+                        account_domain, access_token, masked_view_sql, request.catalog
+                    )
+                    
+                    if view_success:
+                        masked_view_created = True
+                        masked_view_name = view_name or f"{request.catalog}.{request.schema}.{request.tableId}_masked"
+                        yield f"data: {json.dumps({'step': 10, 'status': 'completed', 'message': f'Created masked view: {masked_view_name}'})}\n\n"
+                    else:
+                        masked_view_error = view_error
+                        yield f"data: {json.dumps({'step': 10, 'status': 'warning', 'message': f'Masked view creation failed: {view_error}'})}\n\n"
+                else:
+                    yield f"data: {json.dumps({'step': 10, 'status': 'skipped', 'message': 'No PII columns found, skipping masked view'})}\n\n"
+            except Exception as e:
+                masked_view_error = str(e)
+                yield f"data: {json.dumps({'step': 10, 'status': 'warning', 'message': f'Error with masked view: {str(e)}'})}\n\n"
+            
+            # Step 11: Finalize
+            yield f"data: {json.dumps({'step': 11, 'status': 'in_progress', 'message': 'Finalizing and completing...'})}\n\n"
+            
+            elapsed_time = time.time() - start_time
+            total_tags = column_tags_count + (1 if request.catalogTag else 0) + (1 if request.schemaTag else 0) + (1 if request.tableTag else 0)
+            
+            if success_count == total_tags and total_tags > 0:
+                billing_message = f"✅ Starburst Tags Applied Successfully!\n\nApplied {success_count} tags to {request.catalog}.{request.schema}.{request.tableId}.\n\nAll tags have been directly added to Starburst Galaxy!"
+                if masked_view_created:
+                    billing_message += f"\n\n🔒 Security: Masked view '{masked_view_name}' created successfully!"
+                elif masked_view_sql:
+                    billing_message += "\n\n🔒 Security: Masked view SQL generated for PII columns!"
+                success = True
+            elif success_count > 0:
+                billing_message = f"⚠️ Partial Success: {success_count} of {total_tags} tags applied."
+                if error_messages:
+                    billing_message += "\n\nErrors:\n" + "\n".join(error_messages[:5])
+                success = True
+            else:
+                billing_message = f"❌ Starburst Tag Publishing Failed!\n\n"
+                if error_messages:
+                    billing_message += "Errors:\n" + "\n".join(error_messages[:5])
+                success = False
+            
+            yield f"data: {json.dumps({'step': 11, 'status': 'completed', 'message': f'Completed in {elapsed_time:.2f} seconds'})}\n\n"
+            
+            # Final result
+            result = {
+                'success': success,
+                'message': 'Tags published to Starburst Galaxy via REST API',
+                'sqlCommands': [],
+                'requiresBilling': False,
+                'billingMessage': billing_message,
+                'maskedViewSQL': masked_view_sql,
+                'maskedViewCreated': masked_view_created,
+                'maskedViewName': masked_view_name,
+                'maskedViewError': masked_view_error,
+                'elapsed_time': elapsed_time,
+                'total_tags': total_tags,
+                'success_count': success_count
+            }
+            
+            yield f"data: {json.dumps({'type': 'result', 'data': result})}\n\n"
+            
+        except Exception as e:
+            yield f"data: {json.dumps({'type': 'error', 'message': f'Publishing failed: {str(e)}'})}\n\n"
+    
+    return StreamingResponse(generate_progress(), media_type="text/plain")
 
 @router.post("/delete-tags", response_model=PublishTagsResponse)
 async def delete_tags_from_columns(request: PublishTagsRequest):

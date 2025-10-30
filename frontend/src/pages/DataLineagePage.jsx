@@ -190,13 +190,19 @@ const DataLineagePage = () => {
   const [activeDetailTab, setActiveDetailTab] = useState('basic');
   const [selectedNode, setSelectedNode] = useState(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  const [asOf, setAsOf] = useState('');
+  const [avgConfidence, setAvgConfidence] = useState(null);
 
   // Fetch lineage data
   const fetchLineage = async () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch('http://localhost:8000/api/lineage');
+      const url = new URL('http://localhost:8000/api/lineage');
+      if (asOf && asOf.trim()) {
+        url.searchParams.set('as_of', new Date(asOf).toISOString());
+      }
+      const response = await fetch(url.toString());
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -206,6 +212,7 @@ const DataLineagePage = () => {
       console.log('Column relationships:', data.column_relationships);
       
       setColumnRelationships(data.column_relationships || 0);
+      setAvgConfidence(typeof data.avg_confidence === 'number' ? data.avg_confidence : null);
       
       if (!data.nodes || data.nodes.length === 0) {
         setError('No lineage data available. Please ensure you have discovered assets with views.');
@@ -779,6 +786,17 @@ const DataLineagePage = () => {
               </FormControl>
             </Grid>
             <Grid item xs={12} md={2}>
+              <TextField
+                fullWidth
+                size="small"
+                type="datetime-local"
+                label="As of"
+                value={asOf}
+                onChange={(e) => setAsOf(e.target.value)}
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+            <Grid item xs={12} md={2}>
               <Button
                 fullWidth
                 variant="outlined"
@@ -787,6 +805,7 @@ const DataLineagePage = () => {
                   setSearchTerm('');
                   setFilterType('all');
                   setFilterSource('all');
+                  setAsOf('');
                   handleAssetSelection(null);
                 }}
               >
@@ -851,11 +870,29 @@ const DataLineagePage = () => {
                   color="success" 
                   size="small"
                 />
+                {avgConfidence !== null && (
+                  <Chip 
+                    label={`Avg Confidence ${(avgConfidence * 100).toFixed(1)}%`} 
+                    color="default" 
+                    size="small"
+                    variant="outlined"
+                  />
+                )}
                 <Chip 
                   label={`${fullLineageData.rawData?.edges?.length || 0} Relationships`} 
                   color="info" 
                   size="small"
                 />
+                <Button size="small" variant="outlined" onClick={async ()=>{
+                  try {
+                    const url = new URL('http://localhost:8000/api/lineage');
+                    url.searchParams.set('snapshot', 'true');
+                    const res = await fetch(url.toString());
+                    if (!res.ok) throw new Error('Snapshot failed');
+                  } catch (e) {
+                    console.error('Snapshot error', e);
+                  }
+                }}>Snapshot Lineage</Button>
               </Box>
             </Alert>
           </Box>
@@ -1693,6 +1730,9 @@ const DataLineagePage = () => {
                   </Typography>
                   <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
                     {selectedEdge.column_lineage.length} column relationships
+                    {typeof selectedEdge.confidence_score === 'number' && (
+                      <> • Confidence {(selectedEdge.confidence_score * 100).toFixed(1)}%</>
+                    )}
                   </Typography>
                 </Box>
                 <IconButton onClick={handleCloseEdgeDialog}>

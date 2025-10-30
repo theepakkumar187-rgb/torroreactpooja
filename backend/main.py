@@ -1587,23 +1587,55 @@ async def test_starburst_connection_stream(connection_data: StarburstConnectionT
 
 @app.get("/api/dashboard/stats", response_model=DashboardStats)
 async def get_dashboard_stats():
-    # Count unique catalogs
-    catalogs = set()
-    for asset in discovered_assets:
-        catalogs.add(asset.get("catalog", "Unknown"))
-    
-    # Get last scan time from most recent connector
-    last_scan = None
-    if active_connectors:
-        last_scan = max([datetime.fromisoformat(c["last_run"]) for c in active_connectors])
-    
-    return DashboardStats(
-        total_assets=len(discovered_assets),
-        total_catalogs=len(catalogs),
-        active_connectors=len([c for c in active_connectors if c["enabled"]]),
-        last_scan=last_scan,
-        monitoring_status="Active" if active_connectors else "Disabled"
-    )
+    try:
+        # Get list of active connector IDs
+        active_connector_ids = set(conn['id'] for conn in active_connectors)
+        
+        # Filter assets to only include those from active connectors
+        filtered_assets = []
+        catalogs = set()
+        
+        for asset in discovered_assets:
+            asset_connector_id = asset.get('connector_id', '')
+            
+            # Include assets from active connectors
+            if asset_connector_id in active_connector_ids:
+                filtered_assets.append(asset)
+                catalogs.add(asset.get("catalog", "Unknown"))
+            # Also include Starburst assets even if connector ID doesn't match (due to timestamp changes)
+            elif asset_connector_id.startswith('starburst_') and any(conn.get('type') == 'Starburst Galaxy' for conn in active_connectors):
+                filtered_assets.append(asset)
+                catalogs.add(asset.get("catalog", "Unknown"))
+            # Also include BigQuery assets for similar reasons
+            elif asset_connector_id.startswith('bq_') and any(conn.get('type') == 'BigQuery' for conn in active_connectors):
+                filtered_assets.append(asset)
+                catalogs.add(asset.get("catalog", "Unknown"))
+        
+        # Get last scan time from most recent connector
+        last_scan = None
+        if active_connectors:
+            try:
+                last_scan = max([datetime.fromisoformat(c["last_run"]) for c in active_connectors])
+            except (ValueError, KeyError):
+                last_scan = None
+        
+        return DashboardStats(
+            total_assets=len(filtered_assets),
+            total_catalogs=len(catalogs),
+            active_connectors=len([c for c in active_connectors if c["enabled"]]),
+            last_scan=last_scan,
+            monitoring_status="Active" if active_connectors else "Disabled"
+        )
+    except Exception as e:
+        print(f"Error in get_dashboard_stats: {str(e)}")
+        # Return default values on error to prevent frontend crashes
+        return DashboardStats(
+            total_assets=0,
+            total_catalogs=0,
+            active_connectors=0,
+            last_scan=None,
+            monitoring_status="Error"
+        )
 
 @app.get("/api/system/health", response_model=SystemHealth)
 async def get_system_health():
@@ -1634,12 +1666,16 @@ async def get_assets(
     """
     import math
     
-    # Only return assets from active connectors
+    # Filter assets to only include those from active connectors
     active_connector_ids = set(conn['id'] for conn in active_connectors)
-    filtered_assets = [
-        asset for asset in discovered_assets 
-        if asset.get('connector_id') in active_connector_ids
-    ]
+    filtered_assets = []
+    
+    for asset in discovered_assets:
+        asset_connector_id = asset.get('connector_id', '')
+        
+        # Include assets from active connectors ONLY
+        if asset_connector_id in active_connector_ids:
+            filtered_assets.append(asset)
     
     # Apply search filter
     if search:
@@ -1728,7 +1764,25 @@ def detect_pii_in_column(column_name: str, column_type: str) -> tuple[bool, Opti
 async def get_asset_detail(asset_id: str):
     # Find the asset from active connectors only
     active_connector_ids = set(conn['id'] for conn in active_connectors)
-    asset = next((a for a in discovered_assets if a["id"] == asset_id and a.get("connector_id") in active_connector_ids), None)
+    
+    # Look for asset with flexible connector matching
+    asset = None
+    for a in discovered_assets:
+        if a["id"] == asset_id:
+            asset_connector_id = a.get("connector_id", "")
+            # Include if exact match
+            if asset_connector_id in active_connector_ids:
+                asset = a
+                break
+            # Include Starburst assets even if connector ID doesn't match
+            elif asset_connector_id.startswith('starburst_') and any(conn.get('type') == 'Starburst Galaxy' for conn in active_connectors):
+                asset = a
+                break
+            # Include BigQuery assets even if connector ID doesn't match
+            elif asset_connector_id.startswith('bq_') and any(conn.get('type') == 'BigQuery' for conn in active_connectors):
+                asset = a
+                break
+    
     if not asset:
         raise HTTPException(status_code=404, detail="Asset not found")
     

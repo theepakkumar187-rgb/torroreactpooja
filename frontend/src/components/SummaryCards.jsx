@@ -9,7 +9,6 @@ import {
   DataObject,
   CloudSync,
   Schedule,
-  MonitorHeart,
 } from '@mui/icons-material';
 
 const SummaryCards = ({ stats }) => {
@@ -40,13 +39,6 @@ const SummaryCards = ({ stats }) => {
       icon: <Schedule sx={{ fontSize: 24, color: 'info.main' }} />,
       color: 'info',
     },
-    {
-      title: 'Monitoring',
-      value: stats.monitoring_status,
-      subtitle: 'Status',
-      icon: <MonitorHeart sx={{ fontSize: 24, color: 'warning.main' }} />,
-      color: 'warning',
-    },
   ];
 
   return (
@@ -54,7 +46,7 @@ const SummaryCards = ({ stats }) => {
       width: '100%',
       maxWidth: 'none',
       display: 'grid',
-      gridTemplateColumns: 'repeat(4, 1fr)',
+      gridTemplateColumns: 'repeat(3, 1fr)',
       gap: '16px',
       padding: '16px 24px',
       margin: 0
